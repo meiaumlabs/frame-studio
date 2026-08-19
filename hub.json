@@ -1,0 +1,11 @@
+{
+  "slug": "frame-studio",
+  "name": "Frame Studio",
+  "tagline": "Gerador de Imagens com Moldura",
+  "description": "Gerador de imagens para redes sociais com moldura pronta. O admin cadastra molduras PNG (arte com centro transparente) e o usuário, numa página com shortcode, envia uma foto, ajusta com recorte e zoom sobre uma prévia 1080x1920, confirma e gera a imagem final para baixar e compartilhar no Instagram, Facebook e WhatsApp.",
+  "category": "Conteúdo & Mídia",
+  "icon": "format-image",
+  "plugin_file": "frame-studio/frame-studio.php",
+  "admin_url": "admin.php?page=frame-studio",
+  "type": "tool"
+}

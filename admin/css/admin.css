@@ -1,0 +1,110 @@
+/**
+ * Frame Studio — admin styles.
+ */
+
+.frs-wrap .frs-sub {
+	color: #646970;
+	margin-top: -4px;
+	font-size: 13px;
+}
+
+.frs-grid {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 20px;
+	align-items: start;
+	margin-top: 12px;
+}
+@media (max-width: 1100px) {
+	.frs-grid {
+		grid-template-columns: 1fr;
+	}
+}
+
+.frs-card {
+	background: #fff;
+	border: 1px solid #dcdfe4;
+	border-radius: 10px;
+	padding: 18px 20px;
+	margin-bottom: 20px;
+}
+.frs-card h2 {
+	margin-top: 0;
+	font-size: 16px;
+}
+
+/* Molduras */
+.frs-masks {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	margin: 14px 0;
+}
+.frs-masks-empty {
+	color: #787c82;
+	font-style: italic;
+	margin: 0;
+}
+.frs-mask-item {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 8px;
+	border: 1px solid #e5e7eb;
+	border-radius: 8px;
+	background: #fafbfc;
+}
+.frs-mask-thumb {
+	width: 48px;
+	height: 48px;
+	flex: 0 0 auto;
+	border-radius: 6px;
+	background-size: contain;
+	background-repeat: no-repeat;
+	background-position: center;
+	background-color: #fff;
+	border: 1px solid #e5e7eb;
+	/* xadrez p/ transparência */
+	background-image:
+		linear-gradient(45deg, #eee 25%, transparent 25%),
+		linear-gradient(-45deg, #eee 25%, transparent 25%),
+		linear-gradient(45deg, transparent 75%, #eee 75%),
+		linear-gradient(-45deg, transparent 75%, #eee 75%);
+	background-size: 10px 10px;
+	background-position: 0 0, 0 5px, 5px -5px, -5px 0;
+}
+.frs-mask-meta {
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+	min-width: 0;
+}
+.frs-mask-title {
+	font-weight: 600;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+.frs-mask-dim {
+	color: #787c82;
+	font-size: 12px;
+}
+.frs-mask-del {
+	color: #b32d2e !important;
+}
+
+/* Uso / shortcode */
+.frs-usage .frs-shortcode {
+	display: inline-block;
+	background: #1e2327;
+	color: #7fd1b9;
+	padding: 6px 12px;
+	border-radius: 6px;
+	font-size: 14px;
+	margin-right: 8px;
+}
+
+.frs-card [data-frs-add] .dashicons {
+	vertical-align: middle;
+	margin-top: -2px;
+}
