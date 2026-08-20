@@ -715,6 +715,10 @@
 .frs-app *:not([class*="frs-ico"])::after {
 	content: none !important;
 }
+/* O tema nao pode "reexibir" o que ocultamos via atributo hidden. */
+.frs-app [hidden] {
+	display: none !important;
+}
 
 /* Trava forma/tipografia dos controles contra qualquer regra do tema. */
 .frs-app .frs-btn,
