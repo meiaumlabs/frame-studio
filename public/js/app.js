@@ -44,6 +44,25 @@
 		} );
 	}
 
+	/**
+	 * Reduz uma imagem para caber num lado máximo, preservando a proporção.
+	 * Retorna a própria imagem (se já couber) ou um canvas — ambos desenháveis
+	 * por drawImage e com .width/.height. Evita rejeitar fotos grandes de
+	 * celular e mantém o uso de memória sob controle.
+	 */
+	function fitToMax( img, maxDim ) {
+		var longest = Math.max( img.width, img.height );
+		if ( ! longest || longest <= maxDim ) {
+			return img;
+		}
+		var scale = maxDim / longest;
+		var c = document.createElement( 'canvas' );
+		c.width = Math.round( img.width * scale );
+		c.height = Math.round( img.height * scale );
+		c.getContext( '2d' ).drawImage( img, 0, 0, c.width, c.height );
+		return c;
+	}
+
 	function dataUrlToBlob( dataUrl ) {
 		var parts = dataUrl.split( ',' );
 		var mime = parts[ 0 ].match( /:(.*?);/ )[ 1 ];
@@ -69,6 +88,7 @@
 		this.photoImg = null;  // Image da foto do usuário.
 
 		this.zoom = 1;         // fator sobre o "cover".
+		this.minZoom = 1;      // recalculado por foto (permite afastar até caber inteira).
 		this.offsetX = 0;      // deslocamento em px de canvas.
 		this.offsetY = 0;
 
@@ -206,18 +226,19 @@
 			this.flash( t( 'errType', 'Envie um arquivo de imagem.' ) );
 			return;
 		}
-		var maxBytes = ( D.maxMb || 12 ) * 1024 * 1024;
-		if ( fileObj.size > maxBytes ) {
-			this.flash( t( 'errBig', 'A foto excede o tamanho máximo.' ) );
-			return;
-		}
 		var reader = new FileReader();
 		reader.onload = function ( e ) {
 			loadImage( e.target.result ).then( function ( img ) {
-				self.photoImg = img;
+				// Fotos grandes são redimensionadas no navegador em vez de
+				// rejeitadas: 2560px no lado maior mantém nitidez sobre a
+				// prévia (canvas 1080×1920, até 4× de zoom) sem estourar a
+				// memória em celulares.
+				self.photoImg = fitToMax( img, 2560 );
+				self.minZoom = self.fitZoom();
 				self.zoom = 1;
 				self.offsetX = 0;
 				self.offsetY = 0;
+				self.zoomInput.min = String( self.minZoom );
 				self.zoomInput.value = '1';
 				self.state = 'edit';
 				self.updateState();
@@ -237,8 +258,23 @@
 		return Math.max( this.canvasW / this.photoImg.width, this.canvasH / this.photoImg.height );
 	};
 
+	/**
+	 * Zoom (relativo ao "cover") em que a foto inteira cabe no canvas.
+	 * É ≤ 1: permite afastar até ver a imagem completa, com o fundo
+	 * preenchendo as sobras. Quando as proporções batem, vale 1 (cover).
+	 */
+	Editor.prototype.fitZoom = function () {
+		if ( ! this.photoImg ) {
+			return 1;
+		}
+		var cover   = Math.max( this.canvasW / this.photoImg.width, this.canvasH / this.photoImg.height );
+		var contain = Math.min( this.canvasW / this.photoImg.width, this.canvasH / this.photoImg.height );
+		return cover ? contain / cover : 1;
+	};
+
 	Editor.prototype.setZoom = function ( z ) {
-		this.zoom = Math.max( 1, Math.min( 4, z ) );
+		var min = this.minZoom || 1;
+		this.zoom = Math.max( min, Math.min( 4, z ) );
 		this.render();
 	};
 
@@ -404,8 +440,10 @@
 	Editor.prototype.reset = function () {
 		this.photoImg = null;
 		this.zoom = 1;
+		this.minZoom = 1;
 		this.offsetX = 0;
 		this.offsetY = 0;
+		this.zoomInput.min = '1';
 		this.zoomInput.value = '1';
 		this.state = this.maskImg ? 'photo' : 'mask';
 		this.file.value = '';
