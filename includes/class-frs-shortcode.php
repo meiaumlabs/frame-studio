@@ -182,10 +182,12 @@ class FRS_Shortcode {
 					<!-- A interface é montada pelo JS dentro deste container. -->
 				</div>
 			<?php endif; ?>
-			<div class="frs-credit">
-				<?php esc_html_e( 'Feito com', 'frame-studio' ); ?>
-				<a href="https://61labs.com.br" target="_blank" rel="noopener">Frame Studio</a>
-			</div>
+			<?php if ( ! empty( $s['show_credit'] ) ) : ?>
+				<div class="frs-credit">
+					<?php esc_html_e( 'Feito com', 'frame-studio' ); ?>
+					<a href="https://61labs.com.br" target="_blank" rel="noopener">Frame Studio</a>
+				</div>
+			<?php endif; ?>
 		</div>
 		<?php
 		return (string) ob_get_clean();

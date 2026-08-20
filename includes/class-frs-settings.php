@@ -37,6 +37,7 @@ class FRS_Settings {
 			'help_text'     => '',        // instrução opcional para o usuário
 			'event_name'    => 'Imersão Medconectt', // nome do evento/projeto p/ slug + SEO
 			'ask_name'      => 1,         // pedir o nome da pessoa antes de gerar (1|0)
+			'show_credit'   => 1,         // exibir a assinatura "Feito com Frame Studio" (1|0)
 		);
 	}
 
@@ -114,7 +115,8 @@ class FRS_Settings {
 		if ( '' === trim( $clean['event_name'] ) ) {
 			$clean['event_name'] = $d['event_name'];
 		}
-		$clean['ask_name'] = empty( $input['ask_name'] ) ? 0 : 1;
+		$clean['ask_name']    = empty( $input['ask_name'] ) ? 0 : 1;
+		$clean['show_credit'] = empty( $input['show_credit'] ) ? 0 : 1;
 
 		update_option( self::OPTION, $clean );
 		return $clean;

@@ -247,6 +247,12 @@ class FRS_Admin {
 									<label><input type="checkbox" name="frs[ask_name]" value="1" <?php checked( ! empty( $s['ask_name'] ) ); ?>> <?php esc_html_e( 'Perguntar o nome antes de gerar (usa para nomear/arquivar a imagem).', 'frame-studio' ); ?></label>
 								</td>
 							</tr>
+							<tr>
+								<th scope="row"><?php esc_html_e( 'Assinatura na página', 'frame-studio' ); ?></th>
+								<td>
+									<label><input type="checkbox" name="frs[show_credit]" value="1" <?php checked( ! empty( $s['show_credit'] ) ); ?>> <?php esc_html_e( 'Exibir “Feito com Frame Studio” na página do usuário.', 'frame-studio' ); ?></label>
+								</td>
+							</tr>
 						</table>
 
 						<p class="submit">
