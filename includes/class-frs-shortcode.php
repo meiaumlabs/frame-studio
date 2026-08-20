@@ -79,9 +79,9 @@ class FRS_Shortcode {
 			)
 		);
 
-		// Cor de destaque como CSS var.
-		$accent = esc_attr( $s['accent_color'] );
-		wp_add_inline_style( self::HANDLE, ".frs-app{--frs-accent:{$accent};}" );
+		// Observação: o app usa uma paleta neutra azul fixa (definida no CSS) e
+		// não herda cores do tema nem da "cor de destaque" — por isso não há
+		// mais injeção de --frs-accent aqui.
 	}
 
 	/**

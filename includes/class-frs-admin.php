@@ -183,10 +183,6 @@ class FRS_Admin {
 								</td>
 							</tr>
 							<tr>
-								<th scope="row"><?php esc_html_e( 'Cor de destaque', 'frame-studio' ); ?></th>
-								<td><input type="text" name="frs[accent_color]" value="<?php echo esc_attr( $s['accent_color'] ); ?>" class="frs-color" data-default="#2f6fed"></td>
-							</tr>
-							<tr>
 								<th scope="row"><?php esc_html_e( 'Cor de fundo da composição', 'frame-studio' ); ?></th>
 								<td>
 									<input type="text" name="frs[bg_color]" value="<?php echo esc_attr( $s['bg_color'] ); ?>" class="frs-color" data-default="#ffffff">

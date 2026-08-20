@@ -406,18 +406,41 @@
 	gap: 10px;
 }
 
-/* Ícones inline */
+/* Ícones — webfont Tabler (subset embutido, self-contained). */
+@font-face {
+	font-family: 'frs-icons';
+	src: url('../fonts/frs-icons.woff2') format('woff2');
+	font-weight: 400;
+	font-style: normal;
+	font-display: block;
+}
 .frs-ico {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
 	flex: 0 0 auto;
+	font-size: 1.15em;
+	line-height: 1;
 }
-.frs-ico svg {
-	width: 1.15em;
-	height: 1.15em;
-	display: block;
+.frs-ico::before {
+	font-family: 'frs-icons' !important;
+	font-style: normal;
+	font-weight: 400;
+	font-variant: normal;
+	text-transform: none;
+	line-height: 1;
+	speak: never;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
 }
+.frs-ico-download::before { content: "\ea96"; }
+.frs-ico-share::before { content: "\eb21"; }
+.frs-ico-refresh::before { content: "\eb13"; }
+.frs-ico-link::before { content: "\eade"; }
+.frs-ico-check::before { content: "\ea5e"; }
+.frs-ico-whatsapp::before { content: "\ec74"; }
+.frs-ico-facebook::before { content: "\ec1a"; }
+.frs-ico-instagram::before { content: "\ec20"; }
 
 /* Botões */
 .frs-btn {
@@ -553,9 +576,8 @@
 	color: #fff;
 	border-color: var(--frs-accent);
 }
-.frs-soc .frs-ico svg {
-	width: 24px;
-	height: 24px;
+.frs-soc .frs-ico {
+	font-size: 24px;
 }
 .frs-result-note {
 	margin: 0;
@@ -657,8 +679,8 @@
  * Reforço anti-tema: os controles vencem qualquer regra do tema e
  * nenhum pseudo-elemento decorativo do tema aparece dentro do widget.
  * ---------------------------------------------------------------- */
-.frs-app *::before,
-.frs-app *::after {
+.frs-app *:not([class*="frs-ico"])::before,
+.frs-app *:not([class*="frs-ico"])::after {
 	content: none !important;
 }
 .frs-app .frs-btn,
