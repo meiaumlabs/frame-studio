@@ -39,7 +39,8 @@
 		link: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7l1-1"/></svg>',
 		whatsapp: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2Zm0 1.8c2.17 0 4.2.85 5.74 2.38a8.06 8.06 0 0 1 2.38 5.73c0 4.47-3.64 8.11-8.12 8.11a8.2 8.2 0 0 1-4.19-1.15l-.3-.18-3.11.82.83-3.04-.2-.31a8.13 8.13 0 0 1-1.25-4.35c0-4.47 3.64-8.11 8.12-8.11Zm-2.54 4.28c-.24 0-.63.09-.96.45-.33.36-1.26 1.23-1.26 3s1.29 3.48 1.47 3.72c.18.24 2.53 3.87 6.14 5.28.86.33 1.53.53 2.05.68.86.27 1.65.23 2.27.14.69-.1 2.13-.87 2.43-1.71.3-.84.3-1.56.21-1.71-.09-.15-.33-.24-.69-.42-.36-.18-2.13-1.05-2.46-1.17-.33-.12-.57-.18-.81.18-.24.36-.93 1.17-1.14 1.41-.21.24-.42.27-.78.09-.36-.18-1.52-.56-2.9-1.79-1.07-.95-1.79-2.13-2-2.49-.21-.36-.02-.55.16-.73.16-.16.36-.42.54-.63.18-.21.24-.36.36-.6.12-.24.06-.45-.03-.63-.09-.18-.81-1.95-1.11-2.67-.29-.7-.59-.6-.81-.61-.21-.01-.45-.01-.69-.01Z"/></svg>',
 		facebook: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M22 12.06C22 6.5 17.52 2 12 2S2 6.5 2 12.06c0 5.02 3.66 9.18 8.44 9.94v-7.03H7.9v-2.9h2.54V9.85c0-2.52 1.49-3.91 3.78-3.91 1.09 0 2.24.2 2.24.2v2.47H15.2c-1.24 0-1.63.78-1.63 1.57v1.88h2.78l-.44 2.9h-2.34V22c4.78-.76 8.43-4.92 8.43-9.94Z"/></svg>',
-		instagram: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1.2" fill="currentColor" stroke="none"/></svg>'
+		instagram: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1.2" fill="currentColor" stroke="none"/></svg>',
+		check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>'
 	};
 	function icon( name ) {
 		return '<span class="frs-ico" aria-hidden="true">' + ( ICONS[ name ] || '' ) + '</span>';
@@ -447,35 +448,88 @@
 			ctx.drawImage( this.photoImg, dx, dy, dw, dh );
 			box = { x: dx, y: dy, w: dw, h: dh };
 		}
+		this.photoBox = box;
 
 		// Moldura (por cima, com centro transparente).
 		if ( this.maskImg ) {
 			ctx.drawImage( this.maskImg, 0, 0, this.canvasW, this.canvasH );
 		}
 
-		// Guias dos limites da foto — só na edição, nunca na exportação.
+		// Guias + alças dos limites da foto — só na edição, nunca na exportação.
 		if ( ! forExport && this.state === 'edit' && box ) {
 			this.drawPhotoBounds( ctx, box );
 		}
 	};
 
 	/**
-	 * Contorno tracejado mostrando até onde a foto enviada se estende — ajuda a
-	 * pessoa a enxergar as bordas e o que fica de fora do quadro.
+	 * Contorno tracejado + alças nos cantos. As alças podem ser arrastadas para
+	 * redimensionar a foto proporcionalmente (o zoom acompanha).
 	 */
 	Editor.prototype.drawPhotoBounds = function ( ctx, box ) {
 		var lw = Math.max( 2, this.canvasW / 300 );
+		var blue = 'rgba(37,99,235,0.95)';
 		ctx.save();
-		// Traço branco por baixo (contraste em fundos escuros).
+		// Contorno: traço branco por baixo (contraste) + azul por cima.
+		ctx.setLineDash( [ lw * 4, lw * 3 ] );
 		ctx.lineWidth = lw + 2;
 		ctx.strokeStyle = 'rgba(255,255,255,0.9)';
-		ctx.setLineDash( [ lw * 4, lw * 3 ] );
 		ctx.strokeRect( box.x + lw, box.y + lw, box.w - lw * 2, box.h - lw * 2 );
-		// Traço colorido por cima.
 		ctx.lineWidth = lw;
-		ctx.strokeStyle = 'rgba(47,111,237,0.95)';
+		ctx.strokeStyle = blue;
 		ctx.strokeRect( box.x + lw, box.y + lw, box.w - lw * 2, box.h - lw * 2 );
+
+		// Alças nos 4 cantos.
+		ctx.setLineDash( [] );
+		var r = this.handleRadius();
+		var corners = this.boxCorners( box );
+		for ( var i = 0; i < corners.length; i++ ) {
+			var c = corners[ i ];
+			ctx.beginPath();
+			ctx.arc( c.x, c.y, r, 0, Math.PI * 2 );
+			ctx.fillStyle = '#ffffff';
+			ctx.fill();
+			ctx.lineWidth = lw + 1;
+			ctx.strokeStyle = blue;
+			ctx.stroke();
+		}
 		ctx.restore();
+	};
+
+	/* Raio (em px de canvas) das alças de canto e da zona de toque. */
+	Editor.prototype.handleRadius = function () {
+		return Math.max( 16, this.canvasW * 0.03 );
+	};
+	Editor.prototype.boxCorners = function ( box ) {
+		return [
+			{ x: box.x, y: box.y },
+			{ x: box.x + box.w, y: box.y },
+			{ x: box.x, y: box.y + box.h },
+			{ x: box.x + box.w, y: box.y + box.h }
+		];
+	};
+	Editor.prototype.boxCenter = function () {
+		return { x: this.canvasW / 2 + this.offsetX, y: this.canvasH / 2 + this.offsetY };
+	};
+	/* Converte coordenadas de tela para coordenadas do canvas. */
+	Editor.prototype.toCanvas = function ( clientX, clientY ) {
+		var rect = this.canvas.getBoundingClientRect();
+		var sx = rect.width ? this.canvasW / rect.width : 1;
+		var sy = rect.height ? this.canvasH / rect.height : 1;
+		return { x: ( clientX - rect.left ) * sx, y: ( clientY - rect.top ) * sy };
+	};
+	/* True se o ponto (canvas) está sobre uma alça de canto. */
+	Editor.prototype.cornerHit = function ( p ) {
+		if ( ! this.photoBox ) {
+			return false;
+		}
+		var hit = this.handleRadius() * 1.8;
+		var corners = this.boxCorners( this.photoBox );
+		for ( var i = 0; i < corners.length; i++ ) {
+			if ( Math.hypot( p.x - corners[ i ].x, p.y - corners[ i ].y ) <= hit ) {
+				return true;
+			}
+		}
+		return false;
 	};
 
 	Editor.prototype.updateState = function () {
@@ -506,6 +560,9 @@
 		var pointers = {};
 		var lastDist = 0;
 		var dragging = false;
+		var resizing = false;
+		var resizeStartZoom = 1;
+		var resizeStartDist = 1;
 		var last = null;
 
 		function isEdit() {
@@ -520,9 +577,19 @@
 			pointers[ e.pointerId ] = { x: e.clientX, y: e.clientY };
 			var keys = Object.keys( pointers );
 			if ( keys.length === 1 ) {
-				dragging = true;
-				last = { x: e.clientX, y: e.clientY };
+				// Um dedo sobre um canto = redimensionar; caso contrário, arrastar.
+				var p = self.toCanvas( e.clientX, e.clientY );
+				if ( self.cornerHit( p ) ) {
+					resizing = true;
+					var c = self.boxCenter();
+					resizeStartZoom = self.zoom;
+					resizeStartDist = Math.max( 1, Math.hypot( p.x - c.x, p.y - c.y ) );
+				} else {
+					dragging = true;
+					last = { x: e.clientX, y: e.clientY };
+				}
 			} else if ( keys.length === 2 ) {
+				resizing = false;
 				lastDist = distance( pointers );
 			}
 		} );
@@ -533,6 +600,17 @@
 			}
 			pointers[ e.pointerId ] = { x: e.clientX, y: e.clientY };
 			var keys = Object.keys( pointers );
+
+			// Redimensionar arrastando um canto (proporcional, a partir do centro).
+			if ( resizing && keys.length === 1 ) {
+				var pr = self.toCanvas( e.clientX, e.clientY );
+				var cc = self.boxCenter();
+				var dd = Math.hypot( pr.x - cc.x, pr.y - cc.y );
+				self.setZoom( resizeStartZoom * ( dd / resizeStartDist ) );
+				self.zoomInput.value = String( self.zoom );
+				self.updateZoomLabel();
+				return;
+			}
 
 			if ( keys.length >= 2 ) {
 				// Pinça: ajusta zoom.
@@ -564,6 +642,7 @@
 			}
 			if ( Object.keys( pointers ).length === 0 ) {
 				dragging = false;
+				resizing = false;
 				last = null;
 			}
 		}
@@ -580,6 +659,15 @@
 			self.zoomInput.value = String( self.zoom );
 			self.updateZoomLabel();
 		}, { passive: false } );
+
+		// Cursor de redimensionar ao passar sobre uma alça (desktop).
+		this.canvas.addEventListener( 'mousemove', function ( e ) {
+			if ( ! isEdit() || Object.keys( pointers ).length ) {
+				return;
+			}
+			var p = self.toCanvas( e.clientX, e.clientY );
+			self.canvas.style.cursor = self.cornerHit( p ) ? 'nwse-resize' : '';
+		} );
 
 		function distance( p ) {
 			var k = Object.keys( p );
@@ -800,36 +888,33 @@
 			actions.appendChild( sh );
 		}
 
-		// Redes sociais.
+		// Redes sociais — botões pequenos, só ícone (rótulo via aria-label/title).
 		var socialLabel = el( 'span', 'frs-social-label' );
-		socialLabel.textContent = t( 'share', 'Compartilhar' );
+		socialLabel.textContent = t( 'shareOn', 'Compartilhar em' );
 
 		var social = el( 'div', 'frs-social' );
 
-		var wa = el( 'a', 'frs-soc frs-soc-wa', { target: '_blank', rel: 'noopener' } );
+		var wa = el( 'a', 'frs-soc frs-soc-wa', { target: '_blank', rel: 'noopener', 'aria-label': t( 'shareWhats', 'WhatsApp' ), title: t( 'shareWhats', 'WhatsApp' ) } );
 		wa.href = 'https://wa.me/?text=' + encodeURIComponent( ( D.shareText ? D.shareText + ' ' : '' ) + url );
-		wa.innerHTML = icon( 'whatsapp' ) + '<span>' + t( 'shareWhats', 'WhatsApp' ) + '</span>';
+		wa.innerHTML = icon( 'whatsapp' );
 		social.appendChild( wa );
 
-		var fb = el( 'a', 'frs-soc frs-soc-fb', { target: '_blank', rel: 'noopener' } );
+		var fb = el( 'a', 'frs-soc frs-soc-fb', { target: '_blank', rel: 'noopener', 'aria-label': t( 'shareFace', 'Facebook' ), title: t( 'shareFace', 'Facebook' ) } );
 		fb.href = 'https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent( url );
-		fb.innerHTML = icon( 'facebook' ) + '<span>' + t( 'shareFace', 'Facebook' ) + '</span>';
+		fb.innerHTML = icon( 'facebook' );
 		social.appendChild( fb );
 
-		var ig = el( 'button', 'frs-soc frs-soc-ig', { type: 'button' } );
-		ig.innerHTML = icon( 'instagram' ) + '<span>' + t( 'shareInsta', 'Instagram' ) + '</span>';
+		var igText = t( 'shareInsta', 'Instagram' );
+		var ig = el( 'button', 'frs-soc frs-soc-ig', { type: 'button', 'aria-label': igText + ' (Stories)', title: igText + ' — Stories' } );
+		ig.innerHTML = icon( 'instagram' );
 		ig.addEventListener( 'click', function () {
-			if ( navigator.share ) {
-				self.nativeShare( dataUrl, url, filename );
-			} else {
-				self.flash( t( 'instaHint', 'Baixe a imagem e publique pelo app do Instagram.' ) );
-			}
+			self.shareToStory( dataUrl, url, filename );
 		} );
 		social.appendChild( ig );
 
 		// Copiar link.
-		var copy = el( 'button', 'frs-soc frs-soc-link', { type: 'button' } );
-		copy.innerHTML = icon( 'link' ) + '<span>' + t( 'copyLink', 'Copiar link' ) + '</span>';
+		var copy = el( 'button', 'frs-soc frs-soc-link', { type: 'button', 'aria-label': t( 'copyLink', 'Copiar link' ), title: t( 'copyLink', 'Copiar link' ) } );
+		copy.innerHTML = icon( 'link' );
 		copy.addEventListener( 'click', function () {
 			self.copy( url, copy );
 		} );
@@ -841,12 +926,25 @@
 			self.reset();
 		} );
 
+		// Aviso contextual (ex.: instruções do Instagram) visível no resultado.
+		this.resultNote = el( 'p', 'frs-result-note' );
+		this.resultNote.hidden = true;
+
 		this.result.appendChild( title );
 		this.result.appendChild( preview );
 		this.result.appendChild( actions );
 		this.result.appendChild( socialLabel );
 		this.result.appendChild( social );
+		this.result.appendChild( this.resultNote );
 		this.result.appendChild( again );
+	};
+
+	Editor.prototype.showNote = function ( msg ) {
+		if ( ! this.resultNote ) {
+			return;
+		}
+		this.resultNote.textContent = msg;
+		this.resultNote.hidden = false;
 	};
 
 	Editor.prototype.nativeShare = function ( dataUrl, url, filename ) {
@@ -870,13 +968,49 @@
 		}
 	};
 
-	Editor.prototype.copy = function ( text, btn ) {
-		var done = function () {
-			var old = btn.textContent;
-			btn.textContent = t( 'linkCopied', 'Link copiado!' );
+	/**
+	 * Instagram Stories. No celular, o melhor caminho é compartilhar o ARQUIVO
+	 * (o usuário escolhe Instagram → Stories); há ainda uma tentativa de abrir
+	 * a câmera de Stories por deep link. No desktop, orienta a usar o app.
+	 */
+	Editor.prototype.shareToStory = function ( dataUrl, url, filename ) {
+		var self = this;
+		var isMobile = /android|iphone|ipad|ipod/i.test( navigator.userAgent || '' );
+
+		// 1) Compartilhar o arquivo pela folha nativa (permite Stories).
+		try {
+			var blob = dataUrlToBlob( dataUrl );
+			var file = new File( [ blob ], filename || 'frame-studio.jpg', { type: blob.type } );
+			if ( navigator.canShare && navigator.canShare( { files: [ file ] } ) ) {
+				navigator.share( { files: [ file ], title: D.shareText || '', text: D.shareText || '' } ).catch( function () {} );
+				self.showNote( t( 'instaStory', 'No menu de compartilhamento, toque em Instagram → Stories.' ) );
+				return;
+			}
+		} catch ( e ) {}
+
+		// 2) Deep link para a câmera de Stories do app.
+		if ( isMobile ) {
+			self.showNote( t( 'instaHint', 'Baixe a imagem e publique nos Stories pelo app do Instagram.' ) );
 			setTimeout( function () {
-				btn.textContent = old;
-			}, 1800 );
+				window.location.href = 'instagram://story-camera';
+			}, 500 );
+			return;
+		}
+
+		// 3) Desktop.
+		self.showNote( t( 'instaHint', 'Baixe a imagem e publique nos Stories pelo app do Instagram.' ) );
+	};
+
+	Editor.prototype.copy = function ( text, btn ) {
+		var self = this;
+		var done = function () {
+			var old = btn.innerHTML;
+			btn.classList.add( 'is-done' );
+			btn.innerHTML = icon( 'check' );
+			setTimeout( function () {
+				btn.innerHTML = old;
+				btn.classList.remove( 'is-done' );
+			}, 1500 );
 		};
 		if ( navigator.clipboard && navigator.clipboard.writeText ) {
 			navigator.clipboard.writeText( text ).then( done ).catch( function () {} );
