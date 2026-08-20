@@ -71,19 +71,48 @@ class FRS_Ajax {
 			wp_send_json_error( array( 'message' => __( 'Arquivo de imagem inválido.', 'frame-studio' ) ), 400 );
 		}
 
-		// Grava o arquivo em uploads.
-		$filename = 'frame-studio-' . gmdate( 'Ymd-His' ) . '-' . wp_generate_password( 6, false, false ) . '.' . $ext;
+		// Dados para nome do arquivo e SEO da imagem.
+		$name  = isset( $_POST['name'] ) ? sanitize_text_field( wp_unslash( $_POST['name'] ) ) : '';
+		$name  = trim( preg_replace( '/\s+/', ' ', $name ) );
+		$event = trim( (string) FRS_Settings::get( 'event_name' ) );
+		$date  = gmdate( 'Y-m-d' );
+
+		// Slug: nome + data + evento (ex.: joao-silva-2026-08-20-imersao-medconectt).
+		$slug_base = trim( ( $name ? $name . ' ' : '' ) . $date . ' ' . $event );
+		$slug      = sanitize_title( $slug_base );
+		if ( '' === $slug ) {
+			$slug = 'frame-studio-' . gmdate( 'Ymd-His' );
+		}
+
+		// Grava o arquivo em uploads com nome amigável (sufixo curto p/ unicidade).
+		$filename = $slug . '-' . wp_generate_password( 4, false, false ) . '.' . $ext;
 		$upload   = wp_upload_bits( $filename, null, $bytes );
 
 		if ( ! empty( $upload['error'] ) ) {
 			wp_send_json_error( array( 'message' => $upload['error'] ), 500 );
 		}
 
-		// Cria o anexo na biblioteca de mídia.
+		// Textos de SEO da imagem.
+		$parts = array_filter( array( $name, $event ) );
+		$title = $parts ? implode( ' — ', $parts ) : __( 'Frame Studio', 'frame-studio' );
+		/* translators: 1: nome da pessoa, 2: nome do evento. */
+		$alt = $name && $event
+			? sprintf( __( 'Arte de %1$s para %2$s', 'frame-studio' ), $name, $event )
+			: ( $event ? $event : $title );
+		/* translators: 1: nome do evento, 2: data. */
+		$caption     = $event ? sprintf( __( '%1$s • %2$s', 'frame-studio' ), $event, $date ) : $date;
+		$description = $name && $event
+			/* translators: 1: nome, 2: evento. */
+			? sprintf( __( 'Imagem gerada por %1$s no gerador de molduras de %2$s.', 'frame-studio' ), $name, $event )
+			: __( 'Imagem gerada no Frame Studio.', 'frame-studio' );
+
+		// Cria o anexo na biblioteca de mídia com metadados de SEO.
 		$attachment = array(
 			'post_mime_type' => 'png' === $ext ? 'image/png' : 'image/jpeg',
-			'post_title'     => __( 'Frame Studio', 'frame-studio' ) . ' — ' . gmdate( 'Y-m-d H:i:s' ),
-			'post_content'   => '',
+			'post_title'     => $title,
+			'post_name'      => $slug,
+			'post_excerpt'   => $caption,     // Legenda.
+			'post_content'   => $description, // Descrição.
 			'post_status'    => 'inherit',
 		);
 
@@ -96,8 +125,14 @@ class FRS_Ajax {
 		$meta = wp_generate_attachment_metadata( $attach_id, $upload['file'] );
 		wp_update_attachment_metadata( $attach_id, $meta );
 
-		// Marca a origem para permitir limpeza/identificação futura.
+		// Texto alternativo (alt) — chave usada pelo WordPress/temas/SEO.
+		update_post_meta( $attach_id, '_wp_attachment_image_alt', $alt );
+
+		// Marca a origem e guarda o nome informado para referência/relatórios.
 		update_post_meta( $attach_id, '_frs_generated', 1 );
+		if ( $name ) {
+			update_post_meta( $attach_id, '_frs_person', $name );
+		}
 
 		wp_send_json_success(
 			array(

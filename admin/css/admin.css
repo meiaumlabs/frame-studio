@@ -112,3 +112,52 @@
 	vertical-align: middle;
 	margin-top: -2px;
 }
+
+/* Galeria de imagens geradas */
+.frs-gallery-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+	gap: 14px;
+	margin-top: 14px;
+}
+.frs-gallery-item {
+	margin: 0;
+	border: 1px solid #e5e7eb;
+	border-radius: 10px;
+	overflow: hidden;
+	background: #fff;
+	display: flex;
+	flex-direction: column;
+}
+.frs-gallery-item > a {
+	display: block;
+	aspect-ratio: 3 / 4;
+	background: #f3f4f6;
+}
+.frs-gallery-item img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	display: block;
+}
+.frs-gallery-item figcaption {
+	padding: 8px 10px;
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+.frs-gallery-name {
+	font-weight: 600;
+	font-size: 13px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+.frs-gallery-date {
+	color: #787c82;
+	font-size: 11px;
+}
+.frs-gallery-edit {
+	font-size: 12px;
+	margin-top: 2px;
+}

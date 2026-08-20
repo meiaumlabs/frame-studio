@@ -34,6 +34,8 @@ class FRS_Settings {
 			'max_upload_mb' => 12,        // limite do arquivo enviado pelo usuário
 			'headline'      => '',        // texto opcional no topo da página do shortcode
 			'help_text'     => '',        // instrução opcional para o usuário
+			'event_name'    => 'Imersão Medconectt', // nome do evento/projeto p/ slug + SEO
+			'ask_name'      => 1,         // pedir o nome da pessoa antes de gerar (1|0)
 		);
 	}
 
@@ -105,6 +107,12 @@ class FRS_Settings {
 
 		$clean['headline']  = sanitize_text_field( $input['headline'] ?? '' );
 		$clean['help_text'] = sanitize_textarea_field( $input['help_text'] ?? '' );
+
+		$clean['event_name'] = sanitize_text_field( $input['event_name'] ?? $d['event_name'] );
+		if ( '' === trim( $clean['event_name'] ) ) {
+			$clean['event_name'] = $d['event_name'];
+		}
+		$clean['ask_name'] = empty( $input['ask_name'] ) ? 0 : 1;
 
 		update_option( self::OPTION, $clean );
 		return $clean;

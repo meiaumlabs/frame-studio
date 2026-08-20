@@ -153,7 +153,10 @@
 		this.stage.appendChild( this.canvas );
 
 		this.drop = el( 'div', 'frs-drop' );
-		this.drop.innerHTML = '<span class="frs-drop-ic">📷</span><span class="frs-drop-tx">' + t( 'dropHere', 'Toque para enviar sua foto' ) + '</span>';
+		this.drop.innerHTML =
+			'<span class="frs-drop-ic">📷</span>' +
+			'<span class="frs-drop-tx">' + t( 'dropHere', 'Toque para enviar sua foto' ) + '</span>' +
+			'<span class="frs-drop-tip">' + this.orientationTip() + '</span>';
 		this.stage.appendChild( this.drop );
 
 		this.hint = el( 'div', 'frs-hint' );
@@ -179,13 +182,55 @@
 		// ---- Controles ----
 		this.controls = el( 'div', 'frs-controls' );
 
-		this.zoomWrap = el( 'label', 'frs-zoom' );
-		this.zoomWrap.innerHTML = '<span>' + t( 'zoom', 'Zoom' ) + '</span>';
-		this.zoomInput = el( 'input', 'frs-zoom-input', { type: 'range', min: '1', max: '4', step: '0.01', value: '1' } );
+		var tip = el( 'p', 'frs-adjust-tip' );
+		tip.innerHTML = '<strong>' + t( 'adjustTitle', 'Ajuste sua foto' ) + '</strong> ' +
+			t( 'adjust', 'Arraste para posicionar e use − / + para aproximar ou afastar.' );
+		this.controls.appendChild( tip );
+
+		// Linha de zoom: [−] slider [+] com porcentagem.
+		this.zoomWrap = el( 'div', 'frs-zoom' );
+
+		var zoomOut = el( 'button', 'frs-zoom-btn', { type: 'button', 'aria-label': t( 'zoomOut', 'Afastar' ) } );
+		zoomOut.textContent = '−';
+		zoomOut.addEventListener( 'click', function () {
+			self.nudgeZoom( -0.15 );
+		} );
+
+		this.zoomInput = el( 'input', 'frs-zoom-input', { type: 'range', min: '1', max: '4', step: '0.01', value: '1', 'aria-label': t( 'zoom', 'Zoom' ) } );
 		this.zoomInput.addEventListener( 'input', function () {
 			self.setZoom( parseFloat( self.zoomInput.value ) );
+			self.updateZoomLabel();
 		} );
+
+		var zoomIn = el( 'button', 'frs-zoom-btn', { type: 'button', 'aria-label': t( 'zoomIn', 'Aproximar' ) } );
+		zoomIn.textContent = '+';
+		zoomIn.addEventListener( 'click', function () {
+			self.nudgeZoom( 0.15 );
+		} );
+
+		this.zoomLabel = el( 'span', 'frs-zoom-val' );
+
+		this.zoomWrap.appendChild( zoomOut );
 		this.zoomWrap.appendChild( this.zoomInput );
+		this.zoomWrap.appendChild( zoomIn );
+		this.zoomWrap.appendChild( this.zoomLabel );
+		this.controls.appendChild( this.zoomWrap );
+
+		// Ações rápidas: enquadrar (foto inteira) / preencher (cover).
+		var quick = el( 'div', 'frs-quick' );
+		this.btnFit = el( 'button', 'frs-chip', { type: 'button' } );
+		this.btnFit.textContent = t( 'fitWhole', 'Foto inteira' );
+		this.btnFit.addEventListener( 'click', function () {
+			self.frameFit();
+		} );
+		this.btnFill = el( 'button', 'frs-chip', { type: 'button' } );
+		this.btnFill.textContent = t( 'fillFrame', 'Preencher' );
+		this.btnFill.addEventListener( 'click', function () {
+			self.frameFill();
+		} );
+		quick.appendChild( this.btnFit );
+		quick.appendChild( this.btnFill );
+		this.controls.appendChild( quick );
 
 		this.btnReset = el( 'button', 'frs-btn frs-btn-ghost', { type: 'button' } );
 		this.btnReset.textContent = t( 'reset', 'Recomeçar' );
@@ -199,7 +244,6 @@
 			self.generate();
 		} );
 
-		this.controls.appendChild( this.zoomWrap );
 		var row = el( 'div', 'frs-controls-row' );
 		row.appendChild( this.btnReset );
 		row.appendChild( this.btnConfirm );
@@ -215,9 +259,16 @@
 		this.root.appendChild( this.controls );
 		this.root.appendChild( this.result );
 
+		// Uma única moldura: aplica automaticamente e esconde o seletor.
+		this.autoMask = ( D.masks && D.masks.length === 1 ) ? D.masks[ 0 ] : null;
+
 		this.bindGestures();
 		this.updateState();
 		this.render();
+
+		if ( this.autoMask ) {
+			this.selectMask( this.autoMask );
+		}
 	};
 
 	Editor.prototype.flash = function ( msg ) {
@@ -262,6 +313,8 @@
 				// prévia (canvas 1080×1920, até 4× de zoom) sem estourar a
 				// memória em celulares.
 				self.photoImg = fitToMax( img, 2560 );
+				self.origW = img.width;
+				self.origH = img.height;
 				self.minZoom = self.fitZoom();
 				self.zoom = 1;
 				self.offsetX = 0;
@@ -270,7 +323,17 @@
 				self.zoomInput.value = '1';
 				self.state = 'edit';
 				self.updateState();
+				self.updateZoomLabel();
 				self.render();
+
+				// Orientação diferente do quadro: sugere, sem bloquear.
+				var frameKind = self.canvasH > self.canvasW ? 'p' : ( self.canvasW > self.canvasH ? 'l' : 's' );
+				var photoKind = img.height > img.width ? 'p' : ( img.width > img.height ? 'l' : 's' );
+				if ( frameKind !== 's' && photoKind !== 's' && frameKind !== photoKind ) {
+					self.flash( t( 'orMismatch', 'Dica: esta moldura fica melhor com foto ' ) + (
+						frameKind === 'p' ? t( 'orPortrait', 'na vertical (retrato)' ) : t( 'orLandscape', 'na horizontal (paisagem)' )
+					) + '.' );
+				}
 			} ).catch( function () {
 				self.flash( t( 'errType', 'Envie um arquivo de imagem.' ) );
 			} );
@@ -306,13 +369,73 @@
 		this.render();
 	};
 
-	Editor.prototype.render = function () {
+	/* Aproxima/afasta em passos (botões − / +). */
+	Editor.prototype.nudgeZoom = function ( delta ) {
+		this.setZoom( this.zoom + delta );
+		if ( this.zoomInput ) {
+			this.zoomInput.value = String( this.zoom );
+		}
+		this.updateZoomLabel();
+	};
+
+	/* Mostra o zoom como porcentagem relativa ao "preencher" (cover = 100%). */
+	Editor.prototype.updateZoomLabel = function () {
+		if ( this.zoomLabel ) {
+			this.zoomLabel.textContent = Math.round( this.zoom * 100 ) + '%';
+		}
+	};
+
+	/* Enquadra a foto inteira dentro do quadro (o fundo preenche as sobras). */
+	Editor.prototype.frameFit = function () {
+		this.minZoom = this.fitZoom();
+		this.offsetX = 0;
+		this.offsetY = 0;
+		this.setZoom( this.minZoom );
+		if ( this.zoomInput ) {
+			this.zoomInput.value = String( this.zoom );
+		}
+		this.updateZoomLabel();
+	};
+
+	/* Preenche todo o quadro com a foto (cover). */
+	Editor.prototype.frameFill = function () {
+		this.offsetX = 0;
+		this.offsetY = 0;
+		this.setZoom( 1 );
+		if ( this.zoomInput ) {
+			this.zoomInput.value = '1';
+		}
+		this.updateZoomLabel();
+	};
+
+	/* Orientação/tamanho ideal derivados do quadro configurado. */
+	Editor.prototype.orientationTip = function () {
+		var w = this.canvasW;
+		var h = this.canvasH;
+		var kind = ( w === h )
+			? t( 'orSquare', 'quadrada' )
+			: ( h > w ? t( 'orPortrait', 'na vertical (retrato)' ) : t( 'orLandscape', 'na horizontal (paisagem)' ) );
+		return t( 'idealPrefix', 'Ideal: foto ' ) + kind + ' • ' + w + '×' + h + ' px';
+	};
+
+	/**
+	 * Desenha a composição. Com forExport=true, não desenha guias (limites da
+	 * foto) — a imagem final sai limpa, só foto + moldura, sem escurecer nem
+	 * marcações.
+	 */
+	Editor.prototype.render = function ( forExport ) {
 		var ctx = this.ctx;
+		// Suavização máxima preserva a qualidade ao escalar a foto.
+		ctx.imageSmoothingEnabled = true;
+		ctx.imageSmoothingQuality = 'high';
+
 		ctx.clearRect( 0, 0, this.canvasW, this.canvasH );
 
 		// Fundo.
 		ctx.fillStyle = this.bgColor;
 		ctx.fillRect( 0, 0, this.canvasW, this.canvasH );
+
+		var box = null;
 
 		// Foto do usuário (atrás).
 		if ( this.photoImg ) {
@@ -322,12 +445,37 @@
 			var dx = ( this.canvasW - dw ) / 2 + this.offsetX;
 			var dy = ( this.canvasH - dh ) / 2 + this.offsetY;
 			ctx.drawImage( this.photoImg, dx, dy, dw, dh );
+			box = { x: dx, y: dy, w: dw, h: dh };
 		}
 
 		// Moldura (por cima, com centro transparente).
 		if ( this.maskImg ) {
 			ctx.drawImage( this.maskImg, 0, 0, this.canvasW, this.canvasH );
 		}
+
+		// Guias dos limites da foto — só na edição, nunca na exportação.
+		if ( ! forExport && this.state === 'edit' && box ) {
+			this.drawPhotoBounds( ctx, box );
+		}
+	};
+
+	/**
+	 * Contorno tracejado mostrando até onde a foto enviada se estende — ajuda a
+	 * pessoa a enxergar as bordas e o que fica de fora do quadro.
+	 */
+	Editor.prototype.drawPhotoBounds = function ( ctx, box ) {
+		var lw = Math.max( 2, this.canvasW / 300 );
+		ctx.save();
+		// Traço branco por baixo (contraste em fundos escuros).
+		ctx.lineWidth = lw + 2;
+		ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+		ctx.setLineDash( [ lw * 4, lw * 3 ] );
+		ctx.strokeRect( box.x + lw, box.y + lw, box.w - lw * 2, box.h - lw * 2 );
+		// Traço colorido por cima.
+		ctx.lineWidth = lw;
+		ctx.strokeStyle = 'rgba(47,111,237,0.95)';
+		ctx.strokeRect( box.x + lw, box.y + lw, box.w - lw * 2, box.h - lw * 2 );
+		ctx.restore();
 	};
 
 	Editor.prototype.updateState = function () {
@@ -337,7 +485,7 @@
 		this.controls.hidden = ! editing;
 		this.canvas.classList.toggle( 'is-draggable', editing );
 		this.stage.hidden = isResult;
-		this.maskSection.hidden = isResult;
+		this.maskSection.hidden = isResult || !! this.autoMask;
 		this.result.hidden = ! isResult;
 
 		if ( this.state === 'mask' ) {
@@ -393,6 +541,7 @@
 					var ratio = d / lastDist;
 					self.setZoom( self.zoom * ratio );
 					self.zoomInput.value = String( self.zoom );
+					self.updateZoomLabel();
 				}
 				lastDist = d;
 				dragging = false;
@@ -429,6 +578,7 @@
 			var delta = e.deltaY < 0 ? 1.06 : 0.94;
 			self.setZoom( self.zoom * delta );
 			self.zoomInput.value = String( self.zoom );
+			self.updateZoomLabel();
 		}, { passive: false } );
 
 		function distance( p ) {
@@ -492,7 +642,21 @@
 			return;
 		}
 
-		this.render();
+		// Pede o nome (para arquivar/SEO) antes de gerar, se habilitado.
+		if ( D.askName ) {
+			this.openNameModal( function ( name ) {
+				self.doGenerate( name );
+			} );
+		} else {
+			this.doGenerate( '' );
+		}
+	};
+
+	Editor.prototype.doGenerate = function ( name ) {
+		var self = this;
+
+		// Exporta limpo (sem guias) para não escurecer nem marcar a imagem.
+		this.render( true );
 
 		var format = D.format === 'png' ? 'image/png' : 'image/jpeg';
 		var quality = ( D.quality || 92 ) / 100;
@@ -504,6 +668,7 @@
 		body.append( 'action', 'frs_save_image' );
 		body.append( 'nonce', D.nonce );
 		body.append( 'image', dataUrl );
+		body.append( 'name', name || '' );
 
 		fetch( D.ajaxUrl, { method: 'POST', credentials: 'same-origin', body: body } )
 			.then( function ( r ) {
@@ -522,6 +687,74 @@
 				self.setLoading( false );
 				self.flash( t( 'errGeneric', 'Algo deu errado.' ) );
 			} );
+	};
+
+	/**
+	 * Modal simples pedindo o nome da pessoa. Fechado/estilizado dentro do
+	 * próprio widget (sem herdar nada do tema).
+	 */
+	Editor.prototype.openNameModal = function ( onConfirm ) {
+		var self = this;
+		var overlay = el( 'div', 'frs-modal' );
+		var card = el( 'div', 'frs-modal-card' );
+
+		var h = el( 'p', 'frs-modal-title' );
+		h.textContent = t( 'nameTitle', 'Quase lá! Qual é o seu nome?' );
+
+		var sub = el( 'p', 'frs-modal-sub' );
+		sub.textContent = t( 'nameSub', 'Usamos seu nome para nomear e organizar a imagem gerada.' );
+
+		var input = el( 'input', 'frs-modal-input', { type: 'text', maxlength: '60', placeholder: t( 'namePlaceholder', 'Seu nome' ) } );
+
+		var err = el( 'p', 'frs-modal-err' );
+		err.hidden = true;
+		err.textContent = t( 'nameRequired', 'Por favor, digite seu nome.' );
+
+		var row = el( 'div', 'frs-modal-row' );
+		var cancel = el( 'button', 'frs-btn frs-btn-ghost', { type: 'button' } );
+		cancel.textContent = t( 'cancel', 'Cancelar' );
+		var ok = el( 'button', 'frs-btn frs-btn-primary', { type: 'button' } );
+		ok.textContent = t( 'continue', 'Gerar imagem' );
+
+		function close() {
+			overlay.parentNode && overlay.parentNode.removeChild( overlay );
+		}
+		function submit() {
+			var v = ( input.value || '' ).trim();
+			if ( v.length < 2 ) {
+				err.hidden = false;
+				input.focus();
+				return;
+			}
+			close();
+			onConfirm( v );
+		}
+
+		cancel.addEventListener( 'click', close );
+		ok.addEventListener( 'click', submit );
+		input.addEventListener( 'keydown', function ( e ) {
+			if ( e.key === 'Enter' ) {
+				submit();
+			}
+		} );
+		overlay.addEventListener( 'click', function ( e ) {
+			if ( e.target === overlay ) {
+				close();
+			}
+		} );
+
+		row.appendChild( cancel );
+		row.appendChild( ok );
+		card.appendChild( h );
+		card.appendChild( sub );
+		card.appendChild( input );
+		card.appendChild( err );
+		card.appendChild( row );
+		overlay.appendChild( card );
+		this.root.appendChild( overlay );
+		setTimeout( function () {
+			input.focus();
+		}, 30 );
 	};
 
 	Editor.prototype.setLoading = function ( on, text ) {

@@ -227,6 +227,19 @@ class FRS_Admin {
 								<th scope="row"><?php esc_html_e( 'Instrução ao usuário (opcional)', 'frame-studio' ); ?></th>
 								<td><textarea name="frs[help_text]" rows="2" class="large-text"><?php echo esc_textarea( $s['help_text'] ); ?></textarea></td>
 							</tr>
+							<tr>
+								<th scope="row"><?php esc_html_e( 'Nome do evento/projeto', 'frame-studio' ); ?></th>
+								<td>
+									<input type="text" name="frs[event_name]" value="<?php echo esc_attr( $s['event_name'] ); ?>" class="regular-text">
+									<p class="description"><?php esc_html_e( 'Usado no nome do arquivo e no SEO da imagem (título, alt, legenda). Ex.: Imersão Medconectt.', 'frame-studio' ); ?></p>
+								</td>
+							</tr>
+							<tr>
+								<th scope="row"><?php esc_html_e( 'Pedir o nome da pessoa', 'frame-studio' ); ?></th>
+								<td>
+									<label><input type="checkbox" name="frs[ask_name]" value="1" <?php checked( ! empty( $s['ask_name'] ) ); ?>> <?php esc_html_e( 'Perguntar o nome antes de gerar (usa para nomear/arquivar a imagem).', 'frame-studio' ); ?></label>
+								</td>
+							</tr>
 						</table>
 
 						<p class="submit">
@@ -234,6 +247,50 @@ class FRS_Admin {
 						</p>
 					</form>
 				</div>
+			</div>
+
+			<?php
+			$generated = get_posts(
+				array(
+					'post_type'      => 'attachment',
+					'post_status'    => 'inherit',
+					'posts_per_page' => 24,
+					'orderby'        => 'date',
+					'order'          => 'DESC',
+					'meta_key'       => '_frs_generated', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+					'meta_value'     => '1',              // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
+				)
+			);
+			?>
+			<div class="frs-card frs-gallery">
+				<h2><?php esc_html_e( 'Imagens geradas', 'frame-studio' ); ?></h2>
+				<?php if ( empty( $generated ) ) : ?>
+					<p class="description"><?php esc_html_e( 'Nenhuma imagem foi gerada pelos usuários ainda. As gerações aparecerão aqui.', 'frame-studio' ); ?></p>
+				<?php else : ?>
+					<p class="description"><?php esc_html_e( 'Últimas imagens geradas pelos visitantes (também ficam na Biblioteca de Mídia).', 'frame-studio' ); ?></p>
+					<div class="frs-gallery-grid">
+						<?php foreach ( $generated as $g ) : ?>
+							<?php
+							$g_thumb = wp_get_attachment_image_url( $g->ID, 'medium' );
+							$g_full  = wp_get_attachment_url( $g->ID );
+							$g_edit  = get_edit_post_link( $g->ID );
+							$person  = get_post_meta( $g->ID, '_frs_person', true );
+							?>
+							<figure class="frs-gallery-item">
+								<a href="<?php echo esc_url( $g_full ); ?>" target="_blank" rel="noopener">
+									<img src="<?php echo esc_url( $g_thumb ? $g_thumb : $g_full ); ?>" alt="" loading="lazy">
+								</a>
+								<figcaption>
+									<span class="frs-gallery-name"><?php echo esc_html( $person ? $person : get_the_title( $g->ID ) ); ?></span>
+									<span class="frs-gallery-date"><?php echo esc_html( get_the_date( '', $g->ID ) ); ?></span>
+									<?php if ( $g_edit ) : ?>
+										<a class="frs-gallery-edit" href="<?php echo esc_url( $g_edit ); ?>"><?php esc_html_e( 'Editar SEO', 'frame-studio' ); ?></a>
+									<?php endif; ?>
+								</figcaption>
+							</figure>
+						<?php endforeach; ?>
+					</div>
+				<?php endif; ?>
 			</div>
 
 			<div class="frs-card frs-usage">
