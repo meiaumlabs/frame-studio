@@ -107,7 +107,7 @@
 			$masks.find( '[data-frs-empty]' ).remove();
 			var $card = $(
 				'<div class="frs-mask-item">' +
-					'<div class="frs-mask-thumb"></div>' +
+					'<div class="frs-mask-thumb"><img alt="" loading="lazy"></div>' +
 					'<div class="frs-mask-meta">' +
 						'<span class="frs-mask-title"></span>' +
 						'<span class="frs-mask-dim"></span>' +
@@ -116,7 +116,7 @@
 				'</div>'
 			);
 			$card.attr( 'data-mask-id', m.id );
-			$card.find( '.frs-mask-thumb' ).css( 'background-image', "url('" + ( m.thumb || m.url ) + "')" );
+			$card.find( '.frs-mask-thumb img' ).attr( 'src', m.thumb || m.url );
 			$card.find( '.frs-mask-title' ).text( m.title || '(sem título)' );
 			$card.find( '.frs-mask-dim' ).text( ( m.w || 0 ) + '×' + ( m.h || 0 ) );
 			$card.find( '[data-frs-del]' ).text( 'Remover' );

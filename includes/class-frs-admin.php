@@ -149,7 +149,7 @@ class FRS_Admin {
 						<?php endif; ?>
 						<?php foreach ( $masks as $m ) : ?>
 							<div class="frs-mask-item" data-mask-id="<?php echo esc_attr( $m['id'] ); ?>">
-								<div class="frs-mask-thumb" style="background-image:url('<?php echo esc_url( $m['thumb'] ); ?>')"></div>
+								<div class="frs-mask-thumb"><img src="<?php echo esc_url( $m['thumb'] ); ?>" alt="" loading="lazy"></div>
 								<div class="frs-mask-meta">
 									<span class="frs-mask-title"><?php echo esc_html( $m['title'] ? $m['title'] : __( '(sem título)', 'frame-studio' ) ); ?></span>
 									<span class="frs-mask-dim"><?php echo (int) $m['w']; ?>×<?php echo (int) $m['h']; ?></span>
