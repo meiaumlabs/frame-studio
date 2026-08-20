@@ -157,7 +157,17 @@
 	color: #787c82;
 	font-size: 11px;
 }
+.frs-gallery-actions {
+	display: flex;
+	gap: 10px;
+	align-items: center;
+	margin-top: 4px;
+}
 .frs-gallery-edit {
 	font-size: 12px;
-	margin-top: 2px;
+}
+.frs-gallery-del {
+	font-size: 12px;
+	color: #b32d2e !important;
+	cursor: pointer;
 }

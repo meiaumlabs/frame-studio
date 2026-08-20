@@ -107,12 +107,25 @@
 		var self = this;
 		this.root.innerHTML = '';
 
-		// ---- Seletor de molduras ----
-		this.maskSection = el( 'div', 'frs-maskpick' );
-		var mbLabel = el( 'span', 'frs-maskpick-label' );
-		mbLabel.textContent = t( 'chooseMask', 'Escolha uma moldura' );
-		this.maskSection.appendChild( mbLabel );
+		this.multiMask = ( D.masks && D.masks.length > 1 );
 
+		// ---- Cabeçalho de etapa ----
+		this.stepHead = el( 'div', 'frs-step' );
+		this.stepBadge = el( 'span', 'frs-step-badge' );
+		this.stepTitle = el( 'span', 'frs-step-title' );
+		this.stepBack = el( 'button', 'frs-step-back', { type: 'button' } );
+		this.stepBack.textContent = t( 'changeMask', 'Trocar moldura' );
+		this.stepBack.hidden = true;
+		this.stepBack.addEventListener( 'click', function () {
+			self.backToMask();
+		} );
+		this.stepHead.appendChild( this.stepBadge );
+		this.stepHead.appendChild( this.stepTitle );
+		this.stepHead.appendChild( this.stepBack );
+		this.root.appendChild( this.stepHead );
+
+		// ---- Seletor de molduras (etapa 1) — só thumbnail, sem título ----
+		this.maskSection = el( 'div', 'frs-maskpick' );
 		this.maskBar = el( 'div', 'frs-maskbar' );
 		( D.masks || [] ).forEach( function ( m ) {
 			var b = el( 'button', 'frs-mask-opt', { type: 'button', 'data-id': m.id, 'aria-label': m.title || 'moldura' } );
@@ -123,11 +136,6 @@
 			im.loading = 'lazy';
 			thumb.appendChild( im );
 			b.appendChild( thumb );
-			if ( m.title ) {
-				var cap = el( 'span', 'frs-mask-cap' );
-				cap.textContent = m.title;
-				b.appendChild( cap );
-			}
 			b.addEventListener( 'click', function () {
 				self.selectMask( m );
 			} );
@@ -250,8 +258,11 @@
 		this.root.appendChild( this.controls );
 		this.root.appendChild( this.result );
 
-		// Uma única moldura: aplica automaticamente e esconde o seletor.
+		// Uma única moldura: aplica automaticamente e começa direto na etapa 2.
 		this.autoMask = ( D.masks && D.masks.length === 1 ) ? D.masks[ 0 ] : null;
+		if ( this.autoMask ) {
+			this.state = 'photo';
+		}
 
 		this.bindGestures();
 		this.updateState();
@@ -523,20 +534,49 @@
 	};
 
 	Editor.prototype.updateState = function () {
-		var editing = this.state === 'edit';
-		var isResult = this.state === 'result';
-		this.drop.hidden = !! this.photoImg || isResult;
-		this.controls.hidden = ! editing;
-		this.canvas.classList.toggle( 'is-draggable', editing );
-		this.stage.hidden = isResult;
-		this.maskSection.hidden = isResult || !! this.autoMask;
-		this.result.hidden = ! isResult;
+		var s = this.state;
+		var editing = s === 'edit';
+		var isResult = s === 'result';
+		var isMask = s === 'mask';
+		var isPhoto = s === 'photo';
+		var twoSteps = this.multiMask;
 
-		if ( this.state === 'mask' ) {
-			this.drop.querySelector( '.frs-drop-tx' ).textContent = t( 'chooseMask', 'Escolha uma moldura' );
-		} else {
-			this.drop.querySelector( '.frs-drop-tx' ).textContent = t( 'dropHere', 'Toque para enviar sua foto' );
+		// Visibilidade por etapa.
+		this.maskSection.hidden = ! isMask;
+		this.stage.hidden = isResult || isMask;
+		this.controls.hidden = ! editing;
+		this.result.hidden = ! isResult;
+		this.drop.hidden = !! this.photoImg || isResult || isMask;
+		this.canvas.classList.toggle( 'is-draggable', editing );
+
+		// Cabeçalho de etapa.
+		this.stepHead.hidden = isResult;
+		this.stepBadge.hidden = ! twoSteps;
+		this.stepBack.hidden = ! ( twoSteps && ( isPhoto || editing ) );
+		if ( isMask ) {
+			this.stepBadge.textContent = '1';
+			this.stepTitle.textContent = t( 'stepMask', 'Escolha a moldura' );
+		} else if ( isPhoto ) {
+			this.stepBadge.textContent = '2';
+			this.stepTitle.textContent = t( 'stepPhoto', 'Envie sua foto' );
+		} else if ( editing ) {
+			this.stepBadge.textContent = '2';
+			this.stepTitle.textContent = t( 'stepAdjust', 'Ajuste e gere' );
 		}
+
+		var tx = this.drop.querySelector( '.frs-drop-tx' );
+		if ( tx ) {
+			tx.textContent = t( 'dropHere', 'Toque para enviar sua foto' );
+		}
+	};
+
+	/* Volta para a etapa 1 (escolher outra moldura). */
+	Editor.prototype.backToMask = function () {
+		this.photoImg = null;
+		this.state = 'mask';
+		this.file.value = '';
+		this.updateState();
+		this.render();
 	};
 
 	/* ---- Gestos: arrastar + pinça + roda ---- */

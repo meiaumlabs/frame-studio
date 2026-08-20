@@ -3,7 +3,7 @@
  * Plugin Name:       Frame Studio — Gerador de Imagens com Moldura
  * Plugin URI:        https://61labs.com.br/frame-studio
  * Description:       Gerador de imagens para redes sociais com moldura pronta. O admin cadastra molduras PNG (arte com centro transparente) e o usuário, numa página com shortcode, envia uma foto, ajusta com recorte e zoom sobre uma prévia 1080x1920, confirma e gera a imagem final — pronta para baixar e compartilhar no Instagram, Facebook e WhatsApp. Visual neutro e configurável. Desenvolvido pela 61 Labs.
- * Version:           1.5.0
+ * Version:           1.6.0
  * Requires at least: 5.8
  * Requires PHP:      7.4
  * Author:            61 Labs
@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'FRS_VERSION', '1.5.0' );
+define( 'FRS_VERSION', '1.6.0' );
 define( 'FRS_FILE', __FILE__ );
 define( 'FRS_DIR', plugin_dir_path( __FILE__ ) );
 define( 'FRS_URL', plugin_dir_url( __FILE__ ) );

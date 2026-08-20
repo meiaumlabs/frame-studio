@@ -27,6 +27,7 @@ class FRS_Ajax {
 
 		add_action( 'wp_ajax_frs_add_mask', array( __CLASS__, 'add_mask' ) );
 		add_action( 'wp_ajax_frs_remove_mask', array( __CLASS__, 'remove_mask' ) );
+		add_action( 'wp_ajax_frs_delete_generated', array( __CLASS__, 'delete_generated' ) );
 	}
 
 	/* ------------------------------------------------------------------ *
@@ -177,6 +178,31 @@ class FRS_Ajax {
 			wp_send_json_error( array( 'message' => __( 'Moldura não encontrada.', 'frame-studio' ) ), 404 );
 		}
 		wp_send_json_success();
+	}
+
+	/**
+	 * Apaga DE VERDADE uma imagem gerada (arquivo + registro na mídia).
+	 * Só remove anexos marcados como gerados pelo plugin.
+	 */
+	public static function delete_generated() {
+		check_ajax_referer( self::ADMIN_NONCE, 'nonce' );
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Sem permissão.', 'frame-studio' ) ), 403 );
+		}
+
+		$id = isset( $_POST['id'] ) ? (int) $_POST['id'] : 0;
+		if ( $id <= 0 || 'attachment' !== get_post_type( $id ) ) {
+			wp_send_json_error( array( 'message' => __( 'Imagem inválida.', 'frame-studio' ) ), 400 );
+		}
+		if ( ! get_post_meta( $id, '_frs_generated', true ) ) {
+			wp_send_json_error( array( 'message' => __( 'Esta imagem não foi gerada pelo Frame Studio.', 'frame-studio' ) ), 400 );
+		}
+
+		$deleted = wp_delete_attachment( $id, true ); // true = ignora lixeira, apaga o arquivo.
+		if ( ! $deleted ) {
+			wp_send_json_error( array( 'message' => __( 'Não foi possível remover a imagem.', 'frame-studio' ) ), 500 );
+		}
+		wp_send_json_success( array( 'id' => $id ) );
 	}
 
 	/* ------------------------------------------------------------------ *

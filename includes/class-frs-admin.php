@@ -80,7 +80,8 @@ class FRS_Admin {
 					'pickTitle'  => __( 'Escolher moldura PNG', 'frame-studio' ),
 					'pickButton' => __( 'Usar esta moldura', 'frame-studio' ),
 					'onlyPng'    => __( 'A moldura precisa ser um PNG com fundo transparente.', 'frame-studio' ),
-					'confirmDel' => __( 'Remover esta moldura?', 'frame-studio' ),
+					'confirmDel'    => __( 'Remover esta moldura?', 'frame-studio' ),
+					'confirmDelImg' => __( 'Excluir esta imagem permanentemente? Esta ação não pode ser desfeita.', 'frame-studio' ),
 					'sizeWarn'   => __( 'Atenção: a proporção da moldura difere do tamanho da tela configurado (%s). O ideal é que a moldura tenha exatamente essa dimensão.', 'frame-studio' ),
 					'adding'     => __( 'Adicionando…', 'frame-studio' ),
 					'genericErr' => __( 'Erro ao processar. Tente novamente.', 'frame-studio' ),
@@ -289,16 +290,19 @@ class FRS_Admin {
 							$g_edit  = get_edit_post_link( $g->ID );
 							$person  = get_post_meta( $g->ID, '_frs_person', true );
 							?>
-							<figure class="frs-gallery-item">
+							<figure class="frs-gallery-item" data-gen-id="<?php echo (int) $g->ID; ?>">
 								<a href="<?php echo esc_url( $g_full ); ?>" target="_blank" rel="noopener">
 									<img src="<?php echo esc_url( $g_thumb ? $g_thumb : $g_full ); ?>" alt="" loading="lazy">
 								</a>
 								<figcaption>
 									<span class="frs-gallery-name"><?php echo esc_html( $person ? $person : get_the_title( $g->ID ) ); ?></span>
 									<span class="frs-gallery-date"><?php echo esc_html( get_the_date( '', $g->ID ) ); ?></span>
-									<?php if ( $g_edit ) : ?>
-										<a class="frs-gallery-edit" href="<?php echo esc_url( $g_edit ); ?>"><?php esc_html_e( 'Editar SEO', 'frame-studio' ); ?></a>
-									<?php endif; ?>
+									<span class="frs-gallery-actions">
+										<?php if ( $g_edit ) : ?>
+											<a class="frs-gallery-edit" href="<?php echo esc_url( $g_edit ); ?>"><?php esc_html_e( 'Editar SEO', 'frame-studio' ); ?></a>
+										<?php endif; ?>
+										<button type="button" class="button-link frs-gallery-del" data-frs-gen-del><?php esc_html_e( 'Excluir', 'frame-studio' ); ?></button>
+									</span>
 								</figcaption>
 							</figure>
 						<?php endforeach; ?>

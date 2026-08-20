@@ -97,6 +97,10 @@ class FRS_Shortcode {
 	private static function i18n() {
 		return array(
 			'chooseMask'   => __( 'Escolha uma moldura', 'frame-studio' ),
+			'stepMask'     => __( 'Escolha a moldura', 'frame-studio' ),
+			'stepPhoto'    => __( 'Envie sua foto', 'frame-studio' ),
+			'stepAdjust'   => __( 'Ajuste e gere', 'frame-studio' ),
+			'changeMask'   => __( 'Trocar moldura', 'frame-studio' ),
 			'sendPhoto'    => __( 'Enviar foto', 'frame-studio' ),
 			'dropHere'     => __( 'Toque para enviar ou arraste sua foto aqui', 'frame-studio' ),
 			'adjust'       => __( 'Arraste para posicionar e use − / + para aproximar ou afastar.', 'frame-studio' ),

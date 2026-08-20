@@ -103,6 +103,29 @@
 			} );
 		} );
 
+		// Excluir imagem gerada (de verdade).
+		$( document ).on( 'click', '[data-frs-gen-del]', function () {
+			var $item = $( this ).closest( '.frs-gallery-item' );
+			var id = $item.data( 'gen-id' );
+			if ( ! id || ! window.confirm( I.confirmDelImg || 'Excluir esta imagem permanentemente?' ) ) {
+				return;
+			}
+			var $btn = $( this ).prop( 'disabled', true );
+			post( 'frs_delete_generated', { id: id } ).done( function ( res ) {
+				if ( res && res.success ) {
+					$item.fadeOut( 150, function () {
+						$item.remove();
+					} );
+				} else {
+					window.alert( ( res && res.data && res.data.message ) || I.genericErr || 'Erro.' );
+					$btn.prop( 'disabled', false );
+				}
+			} ).fail( function () {
+				window.alert( I.genericErr || 'Erro.' );
+				$btn.prop( 'disabled', false );
+			} );
+		} );
+
 		function addMaskCard( m ) {
 			$masks.find( '[data-frs-empty]' ).remove();
 			var $card = $(
