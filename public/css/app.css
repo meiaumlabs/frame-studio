@@ -94,30 +94,56 @@
 	gap: 14px;
 }
 
-/* Barra de molduras */
+/* Seletor de molduras */
+.frs-maskpick {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+.frs-maskpick-label {
+	font-size: 0.8rem;
+	font-weight: 700;
+	letter-spacing: 0.02em;
+	text-transform: uppercase;
+	color: var(--frs-muted);
+}
 .frs-maskbar {
 	display: flex;
 	gap: 10px;
 	overflow-x: auto;
-	padding: 4px 2px 8px;
+	padding: 2px 2px 10px;
 	scrollbar-width: thin;
+	-webkit-overflow-scrolling: touch;
+	scroll-snap-type: x proximity;
 }
 .frs-mask-opt {
 	flex: 0 0 auto;
-	width: 62px;
-	height: 62px;
+	width: 78px;
 	padding: 0;
-	border: 2px solid var(--frs-line);
-	border-radius: 12px;
-	background: var(--frs-card);
+	border: 0;
+	background: none;
 	cursor: pointer;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 6px;
+	scroll-snap-align: start;
+	-webkit-tap-highlight-color: transparent;
+}
+/* Miniatura: mostra a moldura INTEIRA (contain) sobre um xadrez de transparência. */
+.frs-mask-opt .frs-mask-thumb {
+	width: 78px;
+	height: 120px;
+	border: 2px solid var(--frs-line);
+	border-radius: 14px;
 	overflow: hidden;
-	transition: border-color 0.15s, transform 0.15s;
+	background-color: #fff;
+	transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s;
 	background-image:
-		linear-gradient(45deg, #eee 25%, transparent 25%),
-		linear-gradient(-45deg, #eee 25%, transparent 25%),
-		linear-gradient(45deg, transparent 75%, #eee 75%),
-		linear-gradient(-45deg, transparent 75%, #eee 75%);
+		linear-gradient(45deg, #eef0f3 25%, transparent 25%),
+		linear-gradient(-45deg, #eef0f3 25%, transparent 25%),
+		linear-gradient(45deg, transparent 75%, #eef0f3 75%),
+		linear-gradient(-45deg, transparent 75%, #eef0f3 75%);
 	background-size: 12px 12px;
 	background-position: 0 0, 0 6px, 6px -6px, -6px 0;
 }
@@ -127,10 +153,27 @@
 	object-fit: contain;
 	display: block;
 }
-.frs-mask-opt.is-active {
+.frs-mask-cap {
+	max-width: 78px;
+	font-size: 0.72rem;
+	line-height: 1.2;
+	color: var(--frs-muted);
+	text-align: center;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+.frs-mask-opt:hover .frs-mask-thumb {
+	border-color: #c9cfda;
+}
+.frs-mask-opt.is-active .frs-mask-thumb {
 	border-color: var(--frs-accent);
 	transform: translateY(-2px);
-	box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+	box-shadow: 0 6px 16px rgba(47, 111, 237, 0.22);
+}
+.frs-mask-opt.is-active .frs-mask-cap {
+	color: var(--frs-ink);
+	font-weight: 700;
 }
 
 /* Canvas */
@@ -240,65 +283,113 @@
 	gap: 10px;
 }
 
+/* Ícones inline */
+.frs-ico {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex: 0 0 auto;
+}
+.frs-ico svg {
+	width: 1.15em;
+	height: 1.15em;
+	display: block;
+}
+
 /* Botões */
 .frs-btn {
 	flex: 1;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 9px;
 	appearance: none;
 	border: 0;
-	border-radius: 12px;
-	padding: 13px 18px;
-	font-size: 0.98rem;
+	border-radius: 14px;
+	padding: 14px 18px;
+	min-height: 52px;
+	font-size: 1rem;
 	font-weight: 700;
 	cursor: pointer;
-	transition: filter 0.15s, background 0.15s;
+	transition: transform 0.12s ease, box-shadow 0.15s ease, filter 0.15s ease, background 0.15s ease, color 0.15s ease;
 	text-align: center;
 	text-decoration: none;
-	line-height: 1.2;
+	line-height: 1.15;
+	-webkit-tap-highlight-color: transparent;
+}
+.frs-btn:active {
+	transform: translateY(1px);
 }
 .frs-btn-primary {
 	background: var(--frs-accent);
 	color: #fff;
+	box-shadow: 0 6px 16px rgba(47, 111, 237, 0.28);
 }
 .frs-btn-primary:hover {
-	filter: brightness(0.94);
+	filter: brightness(1.05);
 }
 .frs-btn-accent {
 	background: var(--frs-ink);
 	color: #fff;
+	box-shadow: 0 6px 16px rgba(28, 36, 48, 0.22);
+}
+.frs-btn-accent:hover {
+	filter: brightness(1.12);
 }
 .frs-btn-ghost {
 	background: transparent;
 	color: var(--frs-muted);
 	border: 1px solid var(--frs-line);
+	box-shadow: none;
 }
 .frs-btn-ghost:hover {
 	color: var(--frs-ink);
+	border-color: #c9cfda;
+	background: rgba(0, 0, 0, 0.02);
+}
+.frs-btn-again {
+	flex: 0 0 auto;
+	align-self: center;
+	min-width: 200px;
 }
 
 /* Resultado */
 .frs-result {
 	display: flex;
 	flex-direction: column;
-	gap: 14px;
+	gap: 16px;
 	align-items: center;
 	text-align: center;
 }
 .frs-result-title {
 	margin: 0;
-	font-weight: 700;
-	font-size: 1.05rem;
+	font-weight: 800;
+	font-size: 1.15rem;
+	display: flex;
+	align-items: center;
+	gap: 8px;
 }
 .frs-result-img {
 	max-width: 100%;
-	max-height: 60vh;
+	max-height: 58vh;
 	border-radius: var(--frs-radius);
 	border: 1px solid var(--frs-line);
-	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+	box-shadow: 0 12px 30px rgba(0, 0, 0, 0.14);
 }
 .frs-result-actions {
 	display: flex;
 	gap: 10px;
 	width: 100%;
+}
+.frs-social-label {
+	width: 100%;
+	text-align: center;
+	font-size: 0.78rem;
+	font-weight: 700;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	color: var(--frs-muted);
+	position: relative;
 }
 .frs-social {
 	display: grid;
@@ -307,16 +398,34 @@
 	width: 100%;
 }
 .frs-soc {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 9px;
 	appearance: none;
 	border: 0;
-	border-radius: 12px;
-	padding: 12px 14px;
+	border-radius: 14px;
+	padding: 13px 14px;
+	min-height: 50px;
 	font-weight: 700;
-	font-size: 0.92rem;
+	font-size: 0.95rem;
 	cursor: pointer;
 	color: #fff;
 	text-decoration: none;
 	text-align: center;
+	transition: transform 0.12s ease, box-shadow 0.15s ease, filter 0.15s ease;
+	-webkit-tap-highlight-color: transparent;
+}
+.frs-soc:hover {
+	filter: brightness(1.06);
+	box-shadow: 0 6px 16px rgba(0, 0, 0, 0.16);
+}
+.frs-soc:active {
+	transform: translateY(1px);
+}
+.frs-soc .frs-ico svg {
+	width: 1.25em;
+	height: 1.25em;
 }
 .frs-soc-wa {
 	background: var(--frs-wa);
@@ -345,9 +454,66 @@
 	font-weight: 600;
 }
 
-@media (max-width: 480px) {
+/* ---------------------------------------------------------------- *
+ * Otimização mobile
+ * ---------------------------------------------------------------- */
+@media (max-width: 560px) {
+	.frs-app {
+		max-width: 100%;
+		padding: 4px 10px 12px;
+	}
+	.frs-headline {
+		font-size: 1.25rem;
+	}
+	/* A prévia ocupa a altura confortável do celular sem empurrar os controles. */
+	.frs-canvas {
+		max-height: 56vh;
+	}
+	.frs-canvas-wrap {
+		min-height: 200px;
+	}
+	/* Molduras: miniaturas um pouco menores e roláveis com o dedo. */
+	.frs-mask-opt,
+	.frs-mask-opt .frs-mask-thumb {
+		width: 68px;
+	}
+	.frs-mask-opt .frs-mask-thumb {
+		height: 104px;
+	}
+	.frs-mask-cap {
+		max-width: 68px;
+	}
+	/* Empilha as ações principais; alvos de toque grandes. */
 	.frs-controls-row,
 	.frs-result-actions {
 		flex-direction: column;
+	}
+	.frs-btn {
+		min-height: 54px;
+		font-size: 1.02rem;
+	}
+	.frs-btn-again {
+		width: 100%;
+		min-width: 0;
+	}
+	.frs-soc {
+		min-height: 52px;
+	}
+}
+
+/* Telas muito estreitas: compartilhamento em coluna única. */
+@media (max-width: 360px) {
+	.frs-social {
+		grid-template-columns: 1fr;
+	}
+}
+
+/* Menos movimento para quem prefere. */
+@media (prefers-reduced-motion: reduce) {
+	.frs-app *,
+	.frs-app *::before,
+	.frs-app *::after {
+		transition: none !important;
+		animation-duration: 0.001ms !important;
 	}
 }
