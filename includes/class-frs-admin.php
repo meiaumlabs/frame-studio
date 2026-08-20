@@ -183,6 +183,17 @@ class FRS_Admin {
 								</td>
 							</tr>
 							<tr>
+								<th scope="row"><?php esc_html_e( 'Cor principal (botões)', 'frame-studio' ); ?></th>
+								<td>
+									<input type="text" name="frs[accent_color]" value="<?php echo esc_attr( $s['accent_color'] ); ?>" class="frs-color" data-default="#2563eb">
+									<p class="description"><?php esc_html_e( 'Usada em “Baixar imagem”, seleção de moldura e destaques.', 'frame-studio' ); ?></p>
+								</td>
+							</tr>
+							<tr>
+								<th scope="row"><?php esc_html_e( 'Cor do botão “Compartilhar”', 'frame-studio' ); ?></th>
+								<td><input type="text" name="frs[accent2_color]" value="<?php echo esc_attr( $s['accent2_color'] ); ?>" class="frs-color" data-default="#1c2430"></td>
+							</tr>
+							<tr>
 								<th scope="row"><?php esc_html_e( 'Cor de fundo da composição', 'frame-studio' ); ?></th>
 								<td>
 									<input type="text" name="frs[bg_color]" value="<?php echo esc_attr( $s['bg_color'] ); ?>" class="frs-color" data-default="#ffffff">

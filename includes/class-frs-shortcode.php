@@ -79,9 +79,14 @@ class FRS_Shortcode {
 			)
 		);
 
-		// Observação: o app usa uma paleta neutra azul fixa (definida no CSS) e
-		// não herda cores do tema nem da "cor de destaque" — por isso não há
-		// mais injeção de --frs-accent aqui.
+		// Cores configuráveis no painel (aplicadas com !important no CSS, para
+		// vencerem regras do tema). Não há herança de cor do tema.
+		$accent  = esc_attr( $s['accent_color'] );
+		$accent2 = esc_attr( $s['accent2_color'] );
+		wp_add_inline_style(
+			self::HANDLE,
+			".frs-app{--frs-accent:{$accent};--frs-accent-ink:{$accent};--frs-accent2:{$accent2};}"
+		);
 	}
 
 	/**

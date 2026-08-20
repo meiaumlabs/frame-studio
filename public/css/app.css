@@ -6,6 +6,7 @@
 .frs-app {
 	--frs-accent: #2563eb;
 	--frs-accent-ink: #1d4ed8;
+	--frs-accent2: #1c2430;
 	--frs-ink: #1c2430;
 	--frs-muted: #6b7787;
 	--frs-line: #e6e9ef;
@@ -683,36 +684,73 @@
 .frs-app *:not([class*="frs-ico"])::after {
 	content: none !important;
 }
+
+/* Trava forma/tipografia dos controles contra qualquer regra do tema. */
 .frs-app .frs-btn,
 .frs-app .frs-soc,
 .frs-app .frs-chip,
 .frs-app .frs-zoom-btn {
-	font-family: inherit;
-	text-transform: none;
-	letter-spacing: normal;
+	font-family: inherit !important;
+	text-transform: none !important;
+	letter-spacing: normal !important;
+	text-shadow: none !important;
+	box-shadow: none !important;
+	outline: 0 !important;
 }
-.frs-app .frs-btn-primary {
-	background: var(--frs-accent);
-	color: #fff;
+.frs-app .frs-btn {
+	border: 0 !important;
+	border-radius: 14px !important;
+	padding: 14px 18px !important;
+	min-height: 52px !important;
+	width: auto;
 }
-.frs-app .frs-btn-accent {
-	background: var(--frs-ink);
-	color: #fff;
+.frs-app .frs-chip {
+	border: 1px solid var(--frs-line) !important;
+	border-radius: 999px !important;
+	background: var(--frs-card) !important;
+	color: var(--frs-ink) !important;
 }
-.frs-app .frs-btn-ghost {
-	background: transparent;
-	color: var(--frs-muted);
+.frs-app .frs-zoom-btn {
+	border: 1px solid var(--frs-line) !important;
+	border-radius: 10px !important;
+	background: var(--frs-card) !important;
+	color: var(--frs-ink) !important;
 }
+/* Botões sociais: sempre círculos idênticos, cor neutra. */
 .frs-app .frs-soc {
-	background: var(--frs-soft);
-	color: var(--frs-accent-ink);
+	border: 1px solid var(--frs-line) !important;
+	border-radius: 50% !important;
+	background: var(--frs-soft) !important;
+	color: var(--frs-accent-ink) !important;
+	width: 50px !important;
+	height: 50px !important;
+	box-shadow: none !important;
 }
 .frs-app .frs-soc:hover {
-	background: var(--frs-accent);
-	color: #fff;
+	background: var(--frs-accent) !important;
+	color: #fff !important;
+	border-color: var(--frs-accent) !important;
+}
+/* Cores dos botões principais (vencem o tema). */
+.frs-app .frs-btn-primary {
+	background: var(--frs-accent) !important;
+	color: #fff !important;
+}
+.frs-app .frs-btn-accent {
+	background: var(--frs-accent2) !important;
+	color: #fff !important;
+}
+.frs-app .frs-btn-ghost {
+	background: transparent !important;
+	color: var(--frs-muted) !important;
+	border: 1px solid var(--frs-line) !important;
+}
+.frs-app .frs-btn-ghost:hover {
+	color: var(--frs-ink) !important;
+	border-color: #c9cfda !important;
 }
 .frs-app .frs-mask-opt.is-active .frs-mask-thumb {
-	border-color: var(--frs-accent);
+	border-color: var(--frs-accent) !important;
 }
 
 /* ---------------------------------------------------------------- *

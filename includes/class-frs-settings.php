@@ -24,7 +24,8 @@ class FRS_Settings {
 	 */
 	public static function defaults() {
 		return array(
-			'accent_color'  => '#2f6fed', // Cor de destaque (botões/realces).
+			'accent_color'  => '#2563eb', // Cor principal (botões/realces).
+			'accent2_color' => '#1c2430', // Cor do botão "Compartilhar" (secundária).
 			'bg_color'      => '#ffffff', // Fundo da composição (áreas fora da foto).
 			'canvas_w'      => 1080,
 			'canvas_h'      => 1920,
@@ -89,8 +90,9 @@ class FRS_Settings {
 		$d     = self::defaults();
 		$clean = array();
 
-		$clean['accent_color'] = self::sanitize_color( $input['accent_color'] ?? '', $d['accent_color'] );
-		$clean['bg_color']     = self::sanitize_color( $input['bg_color'] ?? '', $d['bg_color'] );
+		$clean['accent_color']  = self::sanitize_color( $input['accent_color'] ?? '', $d['accent_color'] );
+		$clean['accent2_color'] = self::sanitize_color( $input['accent2_color'] ?? '', $d['accent2_color'] );
+		$clean['bg_color']      = self::sanitize_color( $input['bg_color'] ?? '', $d['bg_color'] );
 
 		$clean['canvas_w'] = self::clamp_int( $input['canvas_w'] ?? $d['canvas_w'], 200, 6000, $d['canvas_w'] );
 		$clean['canvas_h'] = self::clamp_int( $input['canvas_h'] ?? $d['canvas_h'], 200, 6000, $d['canvas_h'] );
