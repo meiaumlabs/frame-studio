@@ -180,7 +180,7 @@ class FRS_Admin {
 								<td>
 									<input type="number" name="frs[canvas_w]" value="<?php echo esc_attr( $s['canvas_w'] ); ?>" min="200" max="6000" class="small-text"> ×
 									<input type="number" name="frs[canvas_h]" value="<?php echo esc_attr( $s['canvas_h'] ); ?>" min="200" max="6000" class="small-text">
-									<p class="description"><?php esc_html_e( 'Padrão de story: 1080 × 1920.', 'frame-studio' ); ?></p>
+									<p class="description"><?php esc_html_e( 'Padrão de story: 1080 × 1920. A imagem final é gerada em alta resolução (2× este tamanho, respeitando o limite do aparelho).', 'frame-studio' ); ?></p>
 								</td>
 							</tr>
 							<tr>
@@ -204,10 +204,10 @@ class FRS_Admin {
 							<tr>
 								<th scope="row"><?php esc_html_e( 'Formato de saída', 'frame-studio' ); ?></th>
 								<td>
-									<label><input type="radio" name="frs[output_format]" value="jpeg" <?php checked( $s['output_format'], 'jpeg' ); ?>> JPG</label>
+									<label><input type="radio" name="frs[output_format]" value="png" <?php checked( $s['output_format'], 'png' ); ?>> <?php esc_html_e( 'PNG (recomendado)', 'frame-studio' ); ?></label>
 									&nbsp;&nbsp;
-									<label><input type="radio" name="frs[output_format]" value="png" <?php checked( $s['output_format'], 'png' ); ?>> PNG</label>
-									<p class="description"><?php esc_html_e( 'JPG gera arquivos menores; PNG preserva transparência.', 'frame-studio' ); ?></p>
+									<label><input type="radio" name="frs[output_format]" value="jpeg" <?php checked( $s['output_format'], 'jpeg' ); ?>> JPG</label>
+									<p class="description"><?php esc_html_e( 'PNG: sem perda, máxima qualidade (padrão). JPG: arquivo menor, com leve compressão.', 'frame-studio' ); ?></p>
 								</td>
 							</tr>
 							<tr>

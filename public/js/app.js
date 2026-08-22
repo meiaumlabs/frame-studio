@@ -421,6 +421,57 @@
 	};
 
 	/**
+	 * Fator de supersampling da exportação. A prévia/edição roda em tamanho de
+	 * canvas (leve no celular), mas a imagem FINAL é gerada em resolução maior
+	 * (nitidez de verdade). Respeita os limites do canvas em iOS/Safari (lado
+	 * máx. ~4096 px e área máx. ~16,7 M px) para não falhar em aparelhos.
+	 */
+	Editor.prototype.exportScale = function () {
+		var want    = Math.max( 1, D.exportScale || 2 );
+		var maxSide = 4096;
+		var maxArea = 16777216;
+		var w       = this.canvasW;
+		var h       = this.canvasH;
+		var byArea  = Math.sqrt( maxArea / ( w * h ) );
+		var bySide  = maxSide / Math.max( w, h );
+		var scale   = Math.min( want, byArea, bySide );
+		return scale < 1 ? 1 : scale;
+	};
+
+	/**
+	 * Monta um canvas offscreen com a composição final (foto + moldura) em
+	 * resolução ampliada por `scale`. Sem guias, sem escurecer. A moldura é
+	 * desenhada a partir da sua arte nativa (alta resolução), então o resultado
+	 * fica nítido; a foto (fonte até 2560 px) também ganha detalhe.
+	 */
+	Editor.prototype.buildExportCanvas = function ( scale ) {
+		var w   = Math.round( this.canvasW * scale );
+		var h   = Math.round( this.canvasH * scale );
+		var c   = document.createElement( 'canvas' );
+		c.width  = w;
+		c.height = h;
+		var ctx = c.getContext( '2d' );
+		ctx.imageSmoothingEnabled = true;
+		ctx.imageSmoothingQuality = 'high';
+
+		ctx.fillStyle = this.bgColor;
+		ctx.fillRect( 0, 0, w, h );
+
+		if ( this.photoImg ) {
+			var s  = this.baseScale() * this.zoom * scale;
+			var dw = this.photoImg.width * s;
+			var dh = this.photoImg.height * s;
+			var dx = ( w - dw ) / 2 + this.offsetX * scale;
+			var dy = ( h - dh ) / 2 + this.offsetY * scale;
+			ctx.drawImage( this.photoImg, dx, dy, dw, dh );
+		}
+		if ( this.maskImg ) {
+			ctx.drawImage( this.maskImg, 0, 0, w, h );
+		}
+		return c;
+	};
+
+	/**
 	 * Desenha a composição. Com forExport=true, não desenha guias (limites da
 	 * foto) — a imagem final sai limpa, só foto + moldura, sem escurecer nem
 	 * marcações.
@@ -772,17 +823,19 @@
 	Editor.prototype.doGenerate = function ( name ) {
 		var self = this;
 
-		// Exporta limpo (sem guias) para não escurecer nem marcar a imagem.
+		// Compõe a imagem FINAL num canvas offscreen em alta resolução (sem
+		// guias, sem escurecer). O canvas visível continua leve para a edição.
+		var exportCanvas;
 		try {
-			this.render( true );
+			exportCanvas = this.buildExportCanvas( this.exportScale() );
 		} catch ( e ) {
 			this.flash( t( 'errExport', 'Não foi possível gerar a imagem neste aparelho.' ) );
 			return;
 		}
 
-		var format  = D.format === 'png' ? 'image/png' : 'image/jpeg';
+		var format  = D.format === 'jpeg' ? 'image/jpeg' : 'image/png';
 		var quality = ( D.quality || 92 ) / 100;
-		var ext     = format === 'image/png' ? 'png' : 'jpg';
+		var ext     = format === 'image/jpeg' ? 'jpg' : 'png';
 
 		this.setLoading( true, t( 'generating', 'Gerando imagem…' ) );
 
@@ -824,7 +877,7 @@
 		function fallback() {
 			var dataUrl = '';
 			try {
-				dataUrl = self.canvas.toDataURL( format, quality );
+				dataUrl = exportCanvas.toDataURL( format, quality );
 			} catch ( e ) {
 				dataUrl = '';
 			}
@@ -841,7 +894,7 @@
 			}
 		}
 
-		if ( this.canvas.toBlob ) {
+		if ( exportCanvas.toBlob ) {
 			var settled = false;
 			// Se o toBlob nunca chamar o callback (bug de memória em alguns
 			// aparelhos), o guarda dispara o plano B em vez de travar no spinner.
@@ -851,7 +904,7 @@
 				fallback();
 			}, 10000 );
 			try {
-				this.canvas.toBlob( function ( blob ) {
+				exportCanvas.toBlob( function ( blob ) {
 					if ( settled ) { return; }
 					settled = true;
 					clearTimeout( guard );

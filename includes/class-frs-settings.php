@@ -16,6 +16,7 @@ class FRS_Settings {
 
 	const OPTION      = 'frs_settings';
 	const OPTION_MASKS = 'frs_masks';
+	const OPTION_VER   = 'frs_settings_ver';
 
 	/**
 	 * Defaults das configurações gerais.
@@ -29,10 +30,10 @@ class FRS_Settings {
 			'bg_color'      => '#ffffff', // Fundo da composição (áreas fora da foto).
 			'canvas_w'      => 1080,
 			'canvas_h'      => 1920,
-			'output_format' => 'jpeg',    // jpeg | png
+			'output_format' => 'png',     // png | jpeg — PNG (sem perda) é o padrão
 			'jpeg_quality'  => 92,        // 1..100 (só para jpeg)
 			'who_can'       => 'all',     // all | logged
-			'max_upload_mb' => 12,        // limite do arquivo enviado pelo usuário
+			'max_upload_mb' => 40,        // limite do arquivo (PNG de alta resolução é maior)
 			'headline'      => '',        // texto opcional no topo da página do shortcode
 			'help_text'     => '',        // instrução opcional para o usuário
 			'event_name'    => 'Imersão Medconectt', // nome do evento/projeto p/ slug + SEO
@@ -51,6 +52,34 @@ class FRS_Settings {
 		if ( false === get_option( self::OPTION_MASKS, false ) ) {
 			add_option( self::OPTION_MASKS, array() );
 		}
+	}
+
+	/**
+	 * Migração idempotente das opções salvas de instalações antigas.
+	 * Roda no plugins_loaded; usa uma flag de versão para executar uma vez.
+	 */
+	public static function maybe_upgrade() {
+		$ver = get_option( self::OPTION_VER, '0' );
+		if ( version_compare( $ver, '1.7.0', '>=' ) ) {
+			return;
+		}
+
+		$saved = get_option( self::OPTION, array() );
+		if ( is_array( $saved ) ) {
+			// Saída em PNG de alta resolução (pedido do cliente): o default
+			// histórico era 'jpeg'. Quem tiver escolhido explicitamente pode
+			// voltar para JPG no painel a qualquer momento.
+			if ( empty( $saved['output_format'] ) || 'jpeg' === $saved['output_format'] ) {
+				$saved['output_format'] = 'png';
+			}
+			// PNG de alta resolução é maior: garante folga no limite de upload.
+			if ( empty( $saved['max_upload_mb'] ) || (int) $saved['max_upload_mb'] < 40 ) {
+				$saved['max_upload_mb'] = 40;
+			}
+			update_option( self::OPTION, $saved );
+		}
+
+		update_option( self::OPTION_VER, '1.7.0' );
 	}
 
 	/**
