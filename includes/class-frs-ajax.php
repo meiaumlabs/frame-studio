@@ -47,18 +47,30 @@ class FRS_Ajax {
 			wp_send_json_error( array( 'message' => __( 'Muitas gerações em pouco tempo. Aguarde alguns minutos e tente novamente.', 'frame-studio' ) ), 429 );
 		}
 
-		$data_url = isset( $_POST['image'] ) ? (string) wp_unslash( $_POST['image'] ) : '';
-		if ( '' === $data_url ) {
-			wp_send_json_error( array( 'message' => __( 'Nenhuma imagem recebida.', 'frame-studio' ) ), 400 );
-		}
+		$bytes = '';
+		$ext   = '';
 
-		$decoded = self::decode_data_url( $data_url );
-		if ( is_wp_error( $decoded ) ) {
-			wp_send_json_error( array( 'message' => $decoded->get_error_message() ), 400 );
-		}
+		// Caminho preferido (mais estável em celulares): arquivo binário enviado
+		// via canvas.toBlob(). Cai para a data URL base64 (plano B do front).
+		if ( isset( $_FILES['file'] ) && is_array( $_FILES['file'] ) && empty( $_FILES['file']['error'] ) && ! empty( $_FILES['file']['tmp_name'] ) && is_uploaded_file( $_FILES['file']['tmp_name'] ) ) {
+			$bytes = (string) file_get_contents( $_FILES['file']['tmp_name'] );
+			if ( '' === $bytes ) {
+				wp_send_json_error( array( 'message' => __( 'Nenhuma imagem recebida.', 'frame-studio' ) ), 400 );
+			}
+		} else {
+			$data_url = isset( $_POST['image'] ) ? (string) wp_unslash( $_POST['image'] ) : '';
+			if ( '' === $data_url ) {
+				wp_send_json_error( array( 'message' => __( 'Nenhuma imagem recebida.', 'frame-studio' ) ), 400 );
+			}
 
-		$bytes = $decoded['bytes'];
-		$ext   = $decoded['ext'];
+			$decoded = self::decode_data_url( $data_url );
+			if ( is_wp_error( $decoded ) ) {
+				wp_send_json_error( array( 'message' => $decoded->get_error_message() ), 400 );
+			}
+
+			$bytes = $decoded['bytes'];
+			$ext   = $decoded['ext'];
+		}
 
 		// Limite de tamanho.
 		$max = (int) FRS_Settings::get( 'max_upload_mb' ) * 1024 * 1024;
@@ -66,10 +78,20 @@ class FRS_Ajax {
 			wp_send_json_error( array( 'message' => __( 'A imagem gerada é grande demais.', 'frame-studio' ) ), 400 );
 		}
 
-		// Valida que é realmente uma imagem.
+		// Valida que é realmente uma imagem e descobre o tipo (para o upload binário).
 		$size = @getimagesizefromstring( $bytes );
 		if ( false === $size || empty( $size[0] ) ) {
 			wp_send_json_error( array( 'message' => __( 'Arquivo de imagem inválido.', 'frame-studio' ) ), 400 );
+		}
+		if ( '' === $ext ) {
+			$detected = isset( $size['mime'] ) ? strtolower( $size['mime'] ) : '';
+			if ( 'image/png' === $detected ) {
+				$ext = 'png';
+			} elseif ( 'image/jpeg' === $detected ) {
+				$ext = 'jpg';
+			} else {
+				wp_send_json_error( array( 'message' => __( 'Formato de imagem não suportado.', 'frame-studio' ) ), 400 );
+			}
 		}
 
 		// Dados para nome do arquivo e SEO da imagem.
@@ -244,7 +266,9 @@ class FRS_Ajax {
 	 * @return bool true se permitido.
 	 */
 	private static function check_rate_limit() {
-		$limit  = (int) apply_filters( 'frs_rate_limit_max', 20 );   // gerações
+		// Padrão folgado: num evento muitos celulares saem pela mesma WiFi (mesmo
+		// IP público), então um teto baixo por IP bloquearia participantes.
+		$limit  = (int) apply_filters( 'frs_rate_limit_max', 60 );   // gerações
 		$window = (int) apply_filters( 'frs_rate_limit_window', 600 ); // segundos
 
 		if ( $limit <= 0 ) {

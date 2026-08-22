@@ -773,37 +773,104 @@
 		var self = this;
 
 		// Exporta limpo (sem guias) para não escurecer nem marcar a imagem.
-		this.render( true );
+		try {
+			this.render( true );
+		} catch ( e ) {
+			this.flash( t( 'errExport', 'Não foi possível gerar a imagem neste aparelho.' ) );
+			return;
+		}
 
-		var format = D.format === 'png' ? 'image/png' : 'image/jpeg';
+		var format  = D.format === 'png' ? 'image/png' : 'image/jpeg';
 		var quality = ( D.quality || 92 ) / 100;
-		var dataUrl = this.canvas.toDataURL( format, quality );
+		var ext     = format === 'image/png' ? 'png' : 'jpg';
 
 		this.setLoading( true, t( 'generating', 'Gerando imagem…' ) );
 
-		var body = new FormData();
-		body.append( 'action', 'frs_save_image' );
-		body.append( 'nonce', D.nonce );
-		body.append( 'image', dataUrl );
-		body.append( 'name', name || '' );
+		// Envia o resultado como ARQUIVO BINÁRIO (via toBlob), não como data URL
+		// base64. No celular (Safari iOS), a data URL de um canvas 1080×1920 com
+		// a foto grande da câmera ainda na memória pode estourar a memória e
+		// falhar em silêncio; o blob é ~1/3 do tamanho e o toBlob é assíncrono,
+		// bem mais estável. Mantemos o data URL como plano B.
+		function upload( blob ) {
+			var body = new FormData();
+			body.append( 'action', 'frs_save_image' );
+			body.append( 'nonce', D.nonce );
+			body.append( 'name', name || '' );
+			body.append( 'file', blob, 'frame-studio.' + ext );
 
-		fetch( D.ajaxUrl, { method: 'POST', credentials: 'same-origin', body: body } )
-			.then( function ( r ) {
-				return r.json();
-			} )
-			.then( function ( res ) {
+			fetch( D.ajaxUrl, { method: 'POST', credentials: 'same-origin', body: body } )
+				.then( function ( r ) {
+					return r.json().catch( function () {
+						throw new Error( 'bad-json' );
+					} );
+				} )
+				.then( function ( res ) {
+					self.setLoading( false );
+					if ( res && res.success && res.data && res.data.url ) {
+						self.showResult( res.data.url, blob, res.data.filename );
+					} else {
+						var msg = res && res.data && res.data.message ? res.data.message : t( 'errGeneric', 'Algo deu errado.' );
+						self.flash( msg );
+					}
+				} )
+				.catch( function () {
+					self.setLoading( false );
+					self.flash( t( 'errNet', 'Falha de conexão ao gerar. Verifique a internet e tente de novo.' ) );
+				} );
+		}
+
+		// Plano B: gera via toDataURL e converte em blob (protegido contra
+		// exceção/OOM). Se nem isso funcionar, avisa em vez de morrer calado.
+		function fallback() {
+			var dataUrl = '';
+			try {
+				dataUrl = self.canvas.toDataURL( format, quality );
+			} catch ( e ) {
+				dataUrl = '';
+			}
+			if ( ! dataUrl || dataUrl.length < 32 ) {
 				self.setLoading( false );
-				if ( res && res.success && res.data && res.data.url ) {
-					self.showResult( res.data.url, dataUrl, res.data.filename );
-				} else {
-					var msg = res && res.data && res.data.message ? res.data.message : t( 'errGeneric', 'Algo deu errado.' );
-					self.flash( msg );
+				self.flash( t( 'errExport', 'Não foi possível gerar a imagem neste aparelho.' ) );
+				return;
+			}
+			try {
+				upload( dataUrlToBlob( dataUrl ) );
+			} catch ( e ) {
+				self.setLoading( false );
+				self.flash( t( 'errExport', 'Não foi possível gerar a imagem neste aparelho.' ) );
+			}
+		}
+
+		if ( this.canvas.toBlob ) {
+			var settled = false;
+			// Se o toBlob nunca chamar o callback (bug de memória em alguns
+			// aparelhos), o guarda dispara o plano B em vez de travar no spinner.
+			var guard = setTimeout( function () {
+				if ( settled ) { return; }
+				settled = true;
+				fallback();
+			}, 10000 );
+			try {
+				this.canvas.toBlob( function ( blob ) {
+					if ( settled ) { return; }
+					settled = true;
+					clearTimeout( guard );
+					if ( blob && blob.size ) {
+						upload( blob );
+					} else {
+						fallback();
+					}
+				}, format, quality );
+			} catch ( e ) {
+				if ( ! settled ) {
+					settled = true;
+					clearTimeout( guard );
+					fallback();
 				}
-			} )
-			.catch( function () {
-				self.setLoading( false );
-				self.flash( t( 'errGeneric', 'Algo deu errado.' ) );
-			} );
+			}
+		} else {
+			fallback();
+		}
 	};
 
 	/**
@@ -886,24 +953,32 @@
 		}
 	};
 
-	Editor.prototype.showResult = function ( url, dataUrl, filename ) {
+	Editor.prototype.showResult = function ( url, blob, filename ) {
 		var self = this;
 		this.state = 'result';
 		this.updateState();
+
+		// URL local do blob para prévia e download (libera o anterior).
+		if ( this.resultObjUrl ) {
+			try { URL.revokeObjectURL( this.resultObjUrl ); } catch ( e ) {}
+		}
+		this.resultBlob = blob;
+		this.resultObjUrl = URL.createObjectURL( blob );
+		var objUrl = this.resultObjUrl;
 
 		this.result.innerHTML = '';
 		var title = el( 'p', 'frs-result-title' );
 		title.textContent = t( 'done', 'Pronto! Sua imagem foi gerada.' );
 
 		var preview = el( 'img', 'frs-result-img' );
-		preview.src = dataUrl;
+		preview.src = objUrl;
 		preview.alt = '';
 
 		var actions = el( 'div', 'frs-result-actions' );
 
 		// Baixar (ação principal).
 		var dl = el( 'a', 'frs-btn frs-btn-primary', { download: filename || 'frame-studio.jpg' } );
-		dl.href = dataUrl;
+		dl.href = objUrl;
 		dl.innerHTML = icon( 'download' ) + '<span>' + t( 'download', 'Baixar imagem' ) + '</span>';
 		actions.appendChild( dl );
 
@@ -912,7 +987,7 @@
 			var sh = el( 'button', 'frs-btn frs-btn-accent', { type: 'button' } );
 			sh.innerHTML = icon( 'share' ) + '<span>' + t( 'share', 'Compartilhar' ) + '</span>';
 			sh.addEventListener( 'click', function () {
-				self.nativeShare( dataUrl, url, filename );
+				self.nativeShare( blob, url, filename );
 			} );
 			actions.appendChild( sh );
 		}
@@ -937,7 +1012,7 @@
 		var ig = el( 'button', 'frs-soc frs-soc-ig', { type: 'button', 'aria-label': igText + ' (Stories)', title: igText + ' — Stories' } );
 		ig.innerHTML = icon( 'instagram' );
 		ig.addEventListener( 'click', function () {
-			self.shareToStory( dataUrl, url, filename );
+			self.shareToStory( blob, url, filename );
 		} );
 		social.appendChild( ig );
 
@@ -976,11 +1051,10 @@
 		this.resultNote.hidden = false;
 	};
 
-	Editor.prototype.nativeShare = function ( dataUrl, url, filename ) {
+	Editor.prototype.nativeShare = function ( blob, url, filename ) {
 		var self = this;
 		try {
-			var blob = dataUrlToBlob( dataUrl );
-			var file = new File( [ blob ], filename || 'frame-studio.jpg', { type: blob.type } );
+			var file = new File( [ blob ], filename || 'frame-studio.jpg', { type: blob.type || 'image/jpeg' } );
 			var payload = { title: D.shareText || '', text: D.shareText || '' };
 			if ( navigator.canShare && navigator.canShare( { files: [ file ] } ) ) {
 				payload.files = [ file ];
@@ -1002,14 +1076,13 @@
 	 * (o usuário escolhe Instagram → Stories); há ainda uma tentativa de abrir
 	 * a câmera de Stories por deep link. No desktop, orienta a usar o app.
 	 */
-	Editor.prototype.shareToStory = function ( dataUrl, url, filename ) {
+	Editor.prototype.shareToStory = function ( blob, url, filename ) {
 		var self = this;
 		var isMobile = /android|iphone|ipad|ipod/i.test( navigator.userAgent || '' );
 
 		// 1) Compartilhar o arquivo pela folha nativa (permite Stories).
 		try {
-			var blob = dataUrlToBlob( dataUrl );
-			var file = new File( [ blob ], filename || 'frame-studio.jpg', { type: blob.type } );
+			var file = new File( [ blob ], filename || 'frame-studio.jpg', { type: blob.type || 'image/jpeg' } );
 			if ( navigator.canShare && navigator.canShare( { files: [ file ] } ) ) {
 				navigator.share( { files: [ file ], title: D.shareText || '', text: D.shareText || '' } ).catch( function () {} );
 				self.showNote( t( 'instaStory', 'No menu de compartilhamento, toque em Instagram → Stories.' ) );

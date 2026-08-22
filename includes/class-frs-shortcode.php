@@ -137,6 +137,8 @@ class FRS_Shortcode {
 			'errBig'       => __( 'A foto excede o tamanho máximo permitido.', 'frame-studio' ),
 			'errType'      => __( 'Envie um arquivo de imagem (JPG ou PNG).', 'frame-studio' ),
 			'errGeneric'   => __( 'Algo deu errado. Tente novamente.', 'frame-studio' ),
+			'errNet'       => __( 'Falha de conexão ao gerar. Verifique a internet e tente de novo.', 'frame-studio' ),
+			'errExport'    => __( 'Não foi possível gerar a imagem neste aparelho. Tente uma foto menor ou feche outros apps.', 'frame-studio' ),
 			'instaHint'    => __( 'Baixe a imagem e publique nos Stories pelo app do Instagram.', 'frame-studio' ),
 			'instaStory'   => __( 'No menu de compartilhamento, toque em Instagram → Stories.', 'frame-studio' ),
 			'copyLink'     => __( 'Copiar link', 'frame-studio' ),
